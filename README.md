@@ -7,7 +7,7 @@ A lightweight, research-grade reproduction and benchmarking framework for Spatio
 
 ---
 
-## 🎯 Target Baselines
+## Target Baselines
 
 This repository implements the 3 primary models from the paper:
 1. **RoBERTa-base (PLM Baseline):** Text-only representation projected into entity embedding space.
@@ -16,7 +16,7 @@ This repository implements the 3 primary models from the paper:
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 Spatial-Temporal-KG/
@@ -55,7 +55,7 @@ Spatial-Temporal-KG/
 
 ---
 
-## 🚀 Quickstart
+## Quickstart
 
 ### 1. Environment Setup
 ```bash
@@ -97,7 +97,7 @@ Outputs the markdown report comparing all reproduced models against paper refere
 
 ---
 
-## 🔬 How to Mutate & Try New Methods
+## How to Mutate & Try New Methods
 
 To test a new architecture or variation (e.g. rotary embeddings, LLM verifier):
 1. Create a new folder under `baselines/my_mutation/`.
