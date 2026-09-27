@@ -1,0 +1,1626 @@
+Knowledge-Based Systems 329 (2025) 114314
+
+Contents lists available at ScienceDirect
+
+Knowledge-Based Systems
+journal homepage: www.elsevier.com/locate/knosys
+
+Question answering over spatio-temporal knowledge graph
+Xinbang Dai
+
+, Huiying Li, Nan Hu
+
+, Yongrui Chen, Rihui Jin, Huikang Hu, Guilin Qi∗
+
+Southeast University, Nanjing, Jiangsu, China
+
+a r t i c l e
+
+i n f o
+
+Keywords:
+Spatio-temporal knowledge graph
+Knowledge graph question answering
+
+a b s t r a c t
+Spatio-temporal knowledge graphs (STKGs) enhance traditional KGs by integrating temporal and spatial annotations, enabling precise reasoning over questions with spatio-temporal dependencies. Despite their potential,
+research on spatio-temporal knowledge graph question answering (STKGQA) remains limited. This is primarily
+due to the lack of datasets that simultaneously contain spatio-temporal information, as well as methods capable
+of handling implicit spatio-temporal reasoning. To bridge this gap, we introduce the spatio-temporal question
+answering dataset (STQAD), the ﬁrst comprehensive benchmark comprising 10,000 natural language questions
+that require both temporal and spatial reasoning. STQAD is constructed with real-world facts containing spatiotemporal information, ensuring that the dataset reﬂects practical scenarios. Furthermore, our experiments reveal
+that existing KGQA methods underperform on STQAD, primarily due to their inability to model spatio-temporal
+interactions. To address this, we propose the spatio-temporal complex question answering (STCQA) method,
+which jointly embeds temporal and spatial features into KG representations and dynamically ﬁlters answers
+through constraint-aware reasoning. STCQA achieves state-of-the-art performance, signiﬁcantly outperforming
+existing baselines. Our work not only provides a valuable resource for future research but also advances the ﬁeld
+by oﬀering a robust baseline for answering complex spatio-temporal questions.
+
+1. Introduction
+Traditional knowledge graphs (KGs) represent static facts as triples
+(subject, relation, object), lacking the ability to capture dynamic temporal
+changes or spatial relationships. In contrast, spatio-temporal knowledge
+graphs (STKGs), such as YAGO2 [1], enhance fact representation by incorporating timestamp and geographical coordinate annotations into
+their triples. This enables STKGs to capture dynamic spatio-temporal
+information, which is crucial for applications such as travel recommendation, historical event analysis, and urban planning [2–4]. Leveraging
+these advancements, researchers can now address questions that require
+both temporal and spatial reasoning, a task we deﬁne as spatio-temporal
+knowledge graph question answering (STKGQA).
+In fact, STKGQA is widely demanded and highly challenging. (1)
+As illustrated in Fig. 1(a), a travel application service user may need to
+ﬁnd recently opened hotels near an airport. The service provider needs
+to search its STKG for each hotel’s establishment time and geographic
+coordinates and then calculate the distance to recommend hotels. Such
+complex queries are widely demanded in their business scenarios. (2) As
+shown in Fig. 1(b), neither temporal or spatial information is explicitly
+given in the question. Correctly answering the question requires detecting implicit timestamps and geographic coordinates contained in entities (such as World War II and Munich) and reasoning on STKG. There-
+
+fore, it is a signiﬁcant challenge to answer such complex questions accurately.
+Despite its potential, current research on STKGQA is sparse and
+largely conﬁned to a few case studies [1,5]. As indicated in Table 1, existing datasets either lack temporal annotations or spatial annotations,
+with no dataset supporting both spatial and temporal reasoning simultaneously. For instance, MULTITQ [6], one of the largest temporal KGQA
+datasets, contains 500k questions but lacks spatial annotations, while
+GeoQuestions1089 [7], a spatial KGQA dataset, comprises 1k questions
+but ignores temporal reasoning. Hence, this data scarcity severely hinders the development of robust STKGQA methods.
+To address this gap, we introduce STQAD, the ﬁrst STKGQA dataset
+that includes an STKG with 15k entities and 138k facts, along with 10k
+natural language questions requiring spatio-temporal reasoning. STQAD
+is designed to reﬂect real-world scenarios, ensuring its practical relevance and utility for advancing STKGQA research. Speciﬁcally, we ﬁrst
+align the temporal KG YAGO15K [8] with the latest version of YAGO [9]
+that includes timestamps and geographic coordinates, thus creating an
+STKG. Based on pre-deﬁned seed templates, we ﬁrst select central entities containing spatio-temporal information from the STKG. Using these
+entities as the center, we expand the 2-hop range subgraphs to extract facts, ultimately generating template questions that contain implicit spatio-temporal information. Our selection methods provide more
+
+∗ Corresponding author.
+
+E-mail address: gqi@seu.edu.cn (G. Qi).
+https://doi.org/10.1016/j.knosys.2025.114314
+Received 30 March 2025; Received in revised form 11 August 2025; Accepted 19 August 2025
+Available online 23 August 2025
+0950-7051/© 2025 Elsevier B.V. All rights are reserved, including those for text and data mining, AI training, and similar technologies.
+
+Knowledge-Based Systems 329 (2025) 114314
+
+X. Dai et al.
+
+Table 1
+KGQA dataset comparison. There is currently no dataset that contains both temporal and spatial
+information in one dataset.
+Dataset
+
+KG
+
+Temporal
+
+Spatial
+
+Paraphrase
+
+#Question
+
+ComplexQuestions [22]
+TempQuestions [19]
+CronQuestions [15]
+MULTITQ [6]
+GeoQuery [23]
+GeoQuestions201 [25]
+GeoQuestions1089 [26]
+
+FreeBase
+FreeBase
+Wikidata
+ICEWS
+Geoquery Database
+GADM, OSM, DBpedia
+YAGO2
+
+×
+✓
+✓
+✓
+×
+×
+×
+
+×
+×
+×
+×
+✓
+✓
+✓
+
+✓
+×
+✓
+×
+×
+×
+✓
+
+2k
+1k
+410k
+500k
+0.9k
+0.2k
+1k
+
+STQAD (ours)
+
+YAGO2
+
+✓
+
+✓
+
+✓
+
+10k
+
+2. We propose the STCQA to address STKGQA. This method can capture
+spatio-temporal information in the question and employ reasoning
+on STKG.
+3. We demonstrate the quality of our new dataset and the eﬀectiveness of our QA methods through comprehensive experiments. Furthermore, although we have obtained promising initial results, our
+dataset still oﬀers ample opportunities for enhancing STKGQA.
+2. Related works
+2.1. KGQA datasets
+Datasets are crucial for enhancing the generalization capabilities of
+KGQA models. However, as shown in Table 1, existing datasets predominantly focus on either temporal or spatial questions without considering
+the more complex scenario of joint spatio-temporal reasoning.
+To address the need for temporal reasoning, several temporal QA
+datasets have been developed. TORQUE [18] introduces multiple-choice
+temporal questions with context, but its focus on multiple-choice format
+limits its applicability to open-ended QA tasks. TempQuestions [19] is
+a dataset speciﬁcally designed for temporal questions, containing 1271
+QA pairs collected through keyword ﬁltering from WebQuestions [20],
+Free917 [21], and ComplexQuestions [22]. However, its small size restricts its utility for spatio-temporal reasoning. CronQuestions [15] is a
+large-scale temporal KGQA dataset comprising 410k questions, all requiring temporal KG to reason answers. While it signiﬁcantly advances
+temporal QA research, it ignores spatial reasoning, limiting its applicability to real-world scenarios. MULTITQ [6] further reﬁnes temporal
+granularity by incorporating questions with multiple timestamp levels,
+yet it also lacks spatial annotations.
+Furthermore, some QA datasets only focus on spatial reasoning.
+GeoQuery [23] contains 880 hand-crafted factual questions about the
+geography of the United States. GeoAnQu [24] is a corpus of 429
+complex and non-factual questions for geographic analysis, which are
+manually extracted from research papers containing GIS analysis and
+GIScience textbooks. GeoQuestions201 [25] is created for the evaluation of GeoQA, targeting linked geospatial datasets built from DBpedia and GADM and OSM datasets (UK and Ireland only), containing
+201 manually crafted factual, simple, and complex questions. GeoQuestions1089 [26] is the largest KGQA benchmark that focuses on the
+geospatial domain of a speciﬁc KG and contains factual, simple, and
+complex questions that contain aggregates and superordinate levels. Despite these advancements, these datasets currently lack temporal annotations, underscoring the need for STQAD.
+
+Fig. 1. The user request in Fig. 1(a) involves the calculation of distance, while
+Fig. 1(b) addresses the comparison of orientation. In the question presented in
+Fig. 1(a), temporal information 2023 is explicitly provided (in blue). The question in Fig. 1(b) is more challenging, as neither the timestamp nor the geographic
+coordinates are explicitly provided (in red).
+
+relevant facts, ensuring our questions are more consistent with realworld use cases. To enhance the template questions’ ﬂuency and diversity, we use ChatGPT1 for paraphrasing, followed by rigorous validation
+to ensure the quality of all QA pairs2 .
+On STQAD, we apply various language models [10–13] and KGQA
+methods [6,14–17] for evaluating their performance on the STKGQA
+task. However, these methods struggle with the STKGQA task due to
+their lack of understanding and representation of spatio-temporal information. To provide a competitive baseline for STQAD, we propose
+a spatio-temporal complex question answering (STCQA) method to address these questions eﬀectively. STCQA consists of three key modules:
+preprocessing, answer retrieval, and answer ﬁltering. In the preprocessing module, we identify spatio-temporal information in the question and
+retrieve their corresponding embeddings from the STKG. In the answer
+retrieval module, we extend the temporal KG embedding method to incorporate spatial information, enabling the joint representation of temporal and spatial features. The question is encoded using BERT [10],
+and its embeddings are fused with the spatio-temporal embeddings from
+the STKG. A scoring function is then applied to retrieve preliminary answers. Finally, in the answer ﬁltering module, we dynamically ﬁlter the
+retrieved answers based on spatio-temporal constraints, such as temporal comparisons (e.g., before) and spatial distance calculations (e.g.,
+within 3 miles). This approach enables STCQA to outperform existing
+baselines by eﬀectively modelling spatio-temporal interactions and handling constraints. In summary, our contributions are as follows:
+
+2.2. KGQA methods
+1. We introduce the STQAD dataset, consisting of 10k questions designed for the STKGQA task. To our knowledge, this is the ﬁrst comprehensive KGQA dataset containing spatial and temporal information in each question.
+1
+
+Recent approaches to KGQA are primarily designed for traditional
+KGs, where facts are represented as static triples. Some methods employ
+query graph extraction techniques to address KGQA tasks [22,27], while
+others utilize neural network models to rank candidate answers or KG
+queries by learning scoring functions [28–32]. Embedding-based methods have also proven eﬀective in tackling these tasks [28–30]. However,
+
+https://openai.com/index/chatgpt
+
+2 Our resource is available at https://github.com/OBriennnnn/STKGQA
+
+2
+
+Knowledge-Based Systems 329 (2025) 114314
+
+X. Dai et al.
+
+Table 2
+Statistics for our STKG.
+
+these methods are not designed to handle spatio-temporal information,
+limiting their applicability to STKGQA.
+For temporal KGQA tasks, recent research employs KG embedding
+techniques to learn embeddings for entities, relations, and timestamps.
+Methods such as CronKGQA [15] and TempoQR [16] determine answers
+by evaluating the distance between time information embeddings and
+question embeddings. While these approaches advance temporal reasoning, they neglect spatial information, making them unsuitable for
+spatio-temporal questions.
+For spatial KGQA tasks related to geographic coordinates, current
+research designs various query languages executable on KGs. Methods
+such as GeoQA [25], GeoQA2 [33], and EarthQA [34] ﬁrst extract entity
+and relation information from the questions, then ﬁll them into the slots
+in query templates that can be executed on KGs. These approaches rely
+on pre-deﬁned rules to map natural language questions to handcrafted
+SPARQL query templates, which limits their ﬂexibility.
+In STKGQA tasks, some studies [1,35] brieﬂy discuss leveraging
+spatio-temporal information for reasoning on STKGs. However, these
+studies primarily rely on expert-crafted templates, which lack ﬂexibility and scalability. Our method, STCQA, overcomes these limitations by
+dynamically processing spatio-temporal information and utilizing language models to comprehend question semantics, enabling robust reasoning over both temporal and spatial constraints.
+
+Statistics type
+
+Quantity
+
+Facts
+Facts (spatio-temporal annotation)
+Entities
+Relations
+Timestamps
+Geographic coordinates
+Time span (year)
+
+138,056
+42,185
+15,403
+113
+572
+2,235
+2-3150
+
+STQAD comprises 2 main parts: an STKG with spatio-temporal annotations and a set of QA pairs that require spatio-temporal reasoning.
+We enhance the original temporal KG [8] by adding timestamps and
+geographic coordinates, expanding it into an STKG. Based on STKG, we
+develop 40 seed templates and then ﬁll out the spatio-temporal clues
+and constraints to generate 10k template questions. In order to improve
+the diversity and ﬂuency of the template questions, we use ChatGPT
+to paraphrase them. Finally, all answers, clues, and constraints are reveriﬁed to ensure the quality of the QA pairs.
+4.1. STKG construction
+YAGO15k [8] is a small-scale temporal KG extracted from the standard YAGO, with facts annotated with timestamps. Unlike YAGO15k,
+YAGO2 [1] is speciﬁcally designed to represent spatio-temporal information for facts. Given that YAGO15k already contains temporal annotations, we believe it provides a suitable foundation for integrating
+spatial information from YAGO2, thereby extending it into an STKG. To
+enhance the spatial information in YAGO15k, we supplement its facts
+with spatio-temporal annotations from YAGO2. Speciﬁcally, we extract
+geographic coordinates and timestamps from YAGO2 and align them
+with the corresponding entities and facts in YAGO15k.
+For facts that already contain timestamps or geographic coordinates
+in YAGO, we directly assign these annotations to the corresponding facts
+in YAGO15k. However, some facts in YAGO15k lack geographical information. In such cases, we supplement the missing location data by
+using the geographic coordinates of the object entity in the fact. For
+example, considering a fact (Albert_Einstein, worksAt, Humboldt_University_of_Berlin, occursSince, 1914, occursUntil, 1917), we can assign the location coordinates of Humboldt_University_of_Berlin as <52.52, 13.39 >
+to complete the fact. This process ensures that many facts in the STKG
+are enriched with both temporal and spatial information. All the facts
+in the STKG are then used as the basis for generating questions, and
+Table 2 shows the statistics.
+
+3. Preliminaries
+3.1. STKG deﬁnition
+An STKG  ∶= (, ,  , ,  ) contains a set of entities , a set of relations , a set of timestamps  , a set of locations , and a set of facts
+ [1]. Each fact (𝑠, 𝑟, 𝑜, 𝑡, 𝑙) ∈  is a tuple where 𝑠, 𝑜 ∈  denote the subject and object entities, respectively, 𝑟 ∈  denotes the relation between
+them, 𝑡 ∈  is the timestamp of the fact and 𝑙 ∈  is the geographic coordinates of the object entity 𝑜. The timestamp 𝑡 of each fact is divided
+into a start time and an end time. Hence, a fact in STKG is represented
+as (subject, relation, object, occursSince, start_time, occursUntil, end_time,
+occursIn, <longitude, latitude>), where occursSince, occursUntil and occursIn are the start time, end time and location identiﬁers.
+3.2. Spatio-temporal knowledge graph question answering
+In STKGQA, answering spatio-temporal questions requires reasoning on STKG based on temporal or spatial information. We deﬁne
+spatio-temporal information in the question as comprising 2 primary
+components: spatio-temporal clues and spatio-temporal constraints.
+Spatio-temporal clues are entities or facts that contain timestamps or geographic coordinates, such as World War II or Munich. Spatio-temporal
+constraints are the reasoning rules based on timestamps and geographic
+coordinates, such as before, northeast, or within 3 miles. Formally, the
+STKGQA task can be deﬁned as follows: given a natural language question  and an STKG , the goal is to retrieve a set of entities  ⊆  that
+satisfy the spatio-temporal constraints embedded in .
+
+4.2. QA dataset generation
+In order to construct QA pairs, we ﬁrst design 40 seed templates with
+executable procedures based on the 10 most frequent STKG relations in
+YAGO15K (Section 4.2.1). Next, we select facts with spatio-temporal
+information from STKG and expand them into the 2-hop subgraphs for
+extracting spatio-temporal clues. By comparing these facts and clues, we
+get the spatio-temporal constraints (Section 4.2.2). Finally, we ﬁll the
+seed templates with these clues and constraints, enriching and diversifying the templates’ semantics through paraphrasing with ChatGPT. Additionally, we validate the eﬀectiveness of the spatio-temporal constraints
+and generate the ﬁnal answers(Section 4.2.3). This approach constructs
+10k QA pairs, with each question’s entities annotated and linked to our
+STKG.
+
+4. The STQAD dataset
+The construction of STQAD follows 4 main Guidelines: (1) The questions must be based on STKG and involve temporal and spatial reasoning. (2) Spatio-temporal information should not be explicitly stated in
+the questions, as users typically cannot provide precise timestamps or
+geographic coordinates. (3) The questions should resemble those posed
+by humans and reﬂect real-world scenarios. For example, consider the
+following questions: Which university northeast of Munich did Einstein
+work at before World War II? and Which university northeast of Munich
+did Einstein work at before the 25th Academy Awards? Clearly, the temporal information in the former question is more related to Einstein. (4)
+The size of the dataset must be suﬃcient to train the model.
+
+4.2.1. Seed template construction
+We select the 10 most common KG relations involving both time
+and location as types of questions. These relations are as follows: location, livesIn, memberOf , dealsWith, playsFor, worksAt, isCitizenOf , hasNeighbour, isPoliticianOf , graduatedFrom. Each relation corresponds to 4
+3
+
+Knowledge-Based Systems 329 (2025) 114314
+
+X. Dai et al.
+
+Table 3
+Some representative template questions generated from seed templates. In some seed templates, the central entity overlaps with the geo clues ({geo clue&central
+entity}). All relations have seed templates for orientation comparison. In addition, the seed templates corresponding to some relations (such as location) also
+involve distance calculation on the geographic constraint. Appendix D shows more seed template examples.
+Relation
+
+Seed template
+
+Template question
+
+<playsFor>
+
+[geo constraint] {geo clue}, which team did {central
+entity} play for [temporal constraint] {temporal clue}?
+
+<hasNeighbor>
+
+Name all countries created [temporal constraint]
+{temporal clue} and [geo constraint] {geo clue&central entity}.
+What hotels in {central entity} were built [temporal
+constraint] {temporal clue} [geo constraint] {geo
+clue}?
+
+{Southwest of} <Stockholm>, which team did
+<George_Moncur>play
+for
+{after}
+<Stockport_County_F.C.>?
+Name all countries created {before} <Trinity_College_(Connecticut)>and {southeast of} <Algeria>.
+
+<location>
+
+What hotels in <London> were built {after}
+<London_Olympic_Games > {within 3 miles of}
+<Big_Ben>?
+
+the Time Clue, and then randomly choose another fact containing geographic coordinates as the Geo Clue.
+To generate spatio-temporal constraints, we compare the spatiotemporal information contained in the clues with that of the central
+fact. Temporal constraints are categorized into 2 types: Double Timestamp Constraints (DTC) and Single Timestamp Constraints (STC). DTC,
+such as during and while, require that the start and end timestamp of
+the central fact are entirely contained within the start and end intervals
+of the Time Clue. DTC is determined through twice comparisons. STC,
+such as before, requires that the end timestamp of the central fact precedes the start timestamp of the Time Clue, while after requires that the
+start timestamp of the central fact follows the end timestamp of theTime
+Clue. STC is determined through a single comparison. Since facts that
+satisfy DTC are uncommon in our STKG, we prioritize generating these
+constraints to ensure a balanced distribution of constraint types.
+Spatial constraints include 3 types: Double Direction Constraint
+(DDC), Single Direction Constraint (SDC), and Distance Constraint (DC).
+DDC, such as northeast, require simultaneous comparisons of both latitude and longitude. SDC, such as north or east, require a comparison of
+either latitude or longitude. For DC, we designed a geographic coordinates calculator to compute distances and ceiling the result. For example, if the calculation yields 2.4 miles, the spatial constraint is 3 miles.
+Since latitude and longitude annotations for facts are more prevalent in
+STKG, these 3 types of spatial constraints are selected randomly.
+
+seed templates that include spatio-temporal reasoning (please see some
+examples in Table 3). Each template is associated with a corresponding seed procedure, which is essentially a SPARQL template containing
+placeholders for variables and spatio-temporal information. Once we determine spatio-temporal clues and constraints for these templates, the
+procedure can be executed and search for all possible answers from the
+STKG (A shows more details).
+As shown in Table 3, the seed templates involve three types of information that need to be ﬁlled in: central entity, spatio-temporal clues,
+and spatio-temporal constraints. (1) Central entity refers to the subject
+entity 𝑠 or object entity 𝑜 in the STKG fact. (2) Spatio-temporal clues
+are presented as events or entities associated with the central entity
+and contain implicit spatio-temporal information. (3) Spatio-temporal
+constraints guide the reasoning about the central entity based on the
+spatio-temporal clues.
+4.2.2. Spatio-temporal clue and constraint generation
+Fig. 2 illustrates the process of generating spatio-temporal clues and
+constraints. For the generation of clues, we use the fact (Albert Einstein,
+worksAt, Humboldt University of Berlin, occursSince, 1914, occursUntil,
+1917, occursIn, <52.52, 13.39>) as central fact, where Albert Einstein
+is the central entity and Humboldt University of Berlin is the candidate
+answer. To facilitate the generation of spatio-temporal clues, we search
+STKG for all facts related to Albert Einstein within 2 hops, which contain
+temporal or geographical information. These facts neighboring the central entity are regarded as highly relevant clue candidates. An example
+of such a fact is (Albert Einstein, livesIn, Munich, occursSince, 1880, occursUntil, 1894, occursIn, <11.58, 48.14>). Furthermore, some ambiguous
+relations (such as inﬂuence and linksTo) in these facts may aﬀect the semantic quality of the template question, so we ﬁlter them out. From the
+remaining facts, we randomly select one fact containing a timestamp as
+
+4.2.3. QA pair generation
+After obtaining all necessary elements for question generation, we
+ﬁll the central entities, spatio-temporal clues, and constraints into seed
+templates to create template questions. These questions are then paraphrased using ChatGPT to enhance their diversity and ﬂuency, and
+they are manually veriﬁed for correctness. Furthermore, verifying the
+
+Fig. 2. The generation of QA pairs. If the fact in the 2-hop subgraph lacks spatio-temporal information, we label it as None. We randomly select facts containing
+spatial or temporal information to serve as clues and generate constraints by comparing them with the Central Fact (in red). During the Answer Veriﬁcation process,
+we examine the generated questions and answers by executable procedure to conﬁrm the validity of the clues and constraints, ensuring the quality of the QA pairs.
+4
+
+Knowledge-Based Systems 329 (2025) 114314
+
+X. Dai et al.
+
+Fig. 3. Length distribution of datasets.
+
+Table 4
+Statistics of the STQAD. More statistics are listed in D.
+Train
+
+Dev
+
+Test
+
+Double Timestamp Constraint (DTC)
+Single Timestamp Constraint (STC)
+
+281
+8224
+
+36
+1027
+
+28
+1035
+
+Double Direction Constraint (DDC)
+Single Direction Constraint (SDC)
+Distance Constraint (DC)
+
+2861
+2852
+2792
+
+363
+356
+344
+
+346
+362
+355
+
+Overall Number
+Average Sentence Length
+
+8505
+16.64
+
+1063
+16.68
+
+1063
+16.63
+
+and spatio-temporal clues are replaced with special tokens to minimize
+their impact on the question’s logical semantics. In the Answer Retrieval module, we replace the special tokens’ embeddings in the BERTencoded [10] question with the spatio-temporal clues’ embeddings from
+the STKG. We then use a 2-layer transformer to fuse question semantic
+encoding and apply the scoring function to retrieve all potential answers from the STKG. In the Answer Filtering module, we apply spatiotemporal constraints to eliminate incorrect potential answers, thereby
+obtaining the ﬁnal answers.
+5.2. Preprocessing module
+To extract entities from the spatio-temporal questions, we employ
+the named entity recognition tool FLERT [36] and the entity linking
+tool BLINK [37]. These tools enable the alignment of entities mentioned
+in the questions with those in the STKG. The entities involved in a question are categorized into three types: central entities, entities implying
+temporal information, and entities implying geographical information.
+The determination of entity types relies on constraint keywords that precede the entities, such as before, northeast of , and within 3 miles of . We
+use special tokens [ENT], [TS] and [GEO] to mark entities: [ENT] denotes the central entity, [TS] denotes an entity that primarily provides
+a temporal clue, and [GEO] denotes an entity that primarily provides a
+spatial clue. Subsequently, based on the classiﬁed special tokens, we retrieve precise timestamps or geographic coordinates contained in these
+entities from the STKG.
+
+answers is crucial to ensuring the quality of the QA pairs: (1) the answer from the central fact may only be one of the correct answers; (2)
+it is essential to determine whether the spatio-temporal constraints are
+eﬀective, speciﬁcally whether these constraints help narrow the search
+space when querying answers in the STKG.
+We ﬁrst re-retrieve the answers using the executable procedure from
+the seed template to obtain all correct answers. This step is necessary because the spatio-temporal constraints are derived from the central fact
+in a backward manner, ensuring that the object of the central fact is
+included in the answer set. However, it may not be the only correct answer. Therefore, we further utilize the procedure to retrieve answers
+from the STKG that satisfy all the constraints. Next, we remove the
+spatio-temporal clues and constraints from the procedure and observe
+whether the number of retrieved answers increases. If removing the constraints does not increase the number of retrieved answers, we consider
+the constraints ineﬀective for narrowing the search space in the STKG;
+such QA pairs are therefore discarded from the ﬁnal dataset. With this
+approach, we generate 10k QA pairs and then split them into training,
+validation, and test sets in a ratio of 8:1:1.
+Table 4 provides the statistics of our dataset. Each question in STQAD
+involves multiple entities and relations, and neither timestamps nor geographic coordinates are explicitly provided. In Fig. 3, we present the
+distribution of question lengths (measured in word count) from STQAD
+and compare it with several current datasets. The ﬁgure indicates that
+a good proportion of questions in STQAD are relatively verbose, which
+increases the complexity for QA systems to parse.
+
+5.3. Answer retrieval module
+Firstly, we replace the special token embeddings with their respective STKG embeddings. To encode entities, timestamps and geographic
+coordinates in STKG, we extend the geographical information in embedding method TComplEx [38]. TComplEx, a temporal extension of
+ComplEx [39], represents each timestamp 𝑡 as a complex vector 𝐭, and
+the score 𝜙𝑇 for a fact (𝑠, 𝑟, 𝑜, 𝑡) is deﬁned as
+(
+)
+(⟨
+⟩)
+𝜙𝑇 𝐞𝑠 , 𝐫, 𝐞𝑜 , 𝐭 = Re 𝐞𝑠 , 𝐫 ⊙ 𝐭, 𝐞𝑜
+(1)
+where 𝐞𝑠 , 𝐫, 𝐭 are the embedding representations of 𝑠, 𝑟, 𝑡. 𝐞𝑜 is the complex vector of 𝑜, and ⊙ is the element-wise product. We extend TComplEx to incorporate location information. The scoring function is deﬁned
+as
+(
+)
+(⟨
+⟩)
+𝜙𝑆𝑇 𝐞𝑠 , 𝐫, 𝐞𝑜 , 𝐭 = Re 𝐞𝑠 , 𝐫 ⊙ 𝐭 ⊙ 𝐥, 𝐞𝑜
+(2)
+
+5. STCQA Method
+5.1. Overview
+
+where the location 𝑙 is represented as the vector 𝐥. All embedding vectors
+are learned such that the scoring function 𝜙𝑆𝑇 assigns higher scores to
+(
+)
+valid facts (𝑠, 𝑟, 𝑜, 𝑡, 𝑙) ∈  compared to invalid facts 𝑠′ , 𝑟′ , 𝑜′ , 𝑡′ , 𝑙′ ∉  .
+Formally, we require
+(
+)
+(
+)
+′
+𝜙𝑆𝑇 𝐞𝑠 , 𝐫, 𝐞𝑜 , 𝐭, 𝐥 > 𝜙𝑆𝑇 𝐞′𝑠 , 𝐫 ′ , 𝐞𝑜 , 𝐭 ′ , 𝐥′
+(3)
+
+The overall architecture of STCQA, as shown in Fig. 4, consists of
+3 modules: Preprocessing, Answer Retrieval, and Answer Filtering. In
+the Preprocessing module, we annotate the attributes of facts or entities in the question to identify the central entity and spatio-temporal
+clues. Then, we retrieve corresponding timestamps and geographic coordinates of spatio-temporal clues from the STKG. The central entity
+5
+
+Knowledge-Based Systems 329 (2025) 114314
+
+X. Dai et al.
+
+Fig. 4. Model architecture of STCQA.
+
+where 𝐞𝑠 and 𝐞′𝑠 are subject embeddings, 𝐫 and 𝐫 ′ are relation embed′
+dings, 𝐞𝑜 and 𝐞𝑜 are object embeddings, and 𝐭, 𝐭 ′ , 𝐥, 𝐥′ denote timestamps
+and geographic coordinates for valid and invalid facts, respectively.
+To retrieve answers from the STKG, we encode the entities, timestamps, and geographic coordinates obtained during the Preprocessing
+stage and replace them with special tokens’ corresponding positions in
+the BERT-encoded question embeddings. Then, we use a 2-layer Transformer [40] to integrate all information. The question representation
+vector, denoted as 𝐪, integrates the semantics of the question and spatiotemporal clues, which can better assist the model in reasoning on STKG.
+The ﬁnal answer score is the element-wise maximum of two directed
+scores:
+(
+)
+(
+)
+(4)
+𝑚𝑎𝑥(𝜙𝑆𝑇 𝐞𝑐 , 𝐖𝐸 𝐪, 𝐞 , 𝐯𝑡 , 𝐯𝑙 , 𝜙𝑆𝑇 𝐞 , 𝐖𝐸 𝐪, 𝐞𝑐 , 𝐯𝑡 , 𝐯𝑙 )
+
+northeast demands that both the latitude and the longitude of the candidate’s location exceed those of the spatial clue. In the case of a distance
+constraint, we compute the great-circle distance via the Haversine formula, round it to the nearest 0.1 mile, and consider the condition satisﬁed only when the result is less than or equal to the speciﬁed threshold. For temporal constraints, a DTC such as during is satisﬁed only
+when the candidate’s start and end times are entirely contained within
+the temporal clue’s time span. In STC, if the compared timestamps are
+equal (e.g., the candidate’s end time equals the clue’s start time), the
+condition is treated as unsatisﬁed. For example, as illustrated in Fig. 4,
+the before constraint requires that the candidate’s end time occur strictly
+earlier than the clue’s start time.
+6. Experiments
+
+where 𝐞𝑐 represents the embedding vector of the central entity identiﬁed in the preprocessing module, 𝐖𝐸 is a 𝐷 × 𝐷 learnable matrix speciﬁc for answer prediction with 𝐷 being the embedding dimension, 𝐪
+denotes the ﬁnal representation vector of the question obtained from
+the 2-layer Transformer, 𝐞 represents the embedding vectors of all candidate answer entities in the STKG, 𝐯𝑡 and 𝐯𝑙 are the embedding vectors
+of the timestamp and geographic coordinate derived from the temporal
+and spatial clues in the question respectively. The scores for all entities, times and locations are concatenated, and the 𝑆𝑜𝑓 𝑡𝑚𝑎𝑥 function is
+used to calculate answer probabilities over this combined score vector.
+During training, the model updates its parameters by minimizing the
+cross-entropy loss function, aiming to assign a higher probability to the
+correct answer.
+
+In this section, we conduct a comprehensive evaluation of the STQAD
+dataset and the STCQA method. Section 6.1 introduces the evaluation
+metrics and baselines. In Section 6.2, we evaluate the performance of
+the baselines and STCQA on the STQAD dataset, and we also observe
+Guideline (1) from Section 4 based on the overall results. Section 6.3
+presents an ablation study to analyze the eﬀectiveness of diﬀerent modules within STCQA. Additionally, we observe Guideline (2) from Section 4 based on the ablation results. Section 6.4 tests the performance
+of our embedding method on the STKG. In Section 6.5, we assess the
+impact of factual relevance in our question on the QA system, thereby
+investigating Guideline (3) from Section 4. Section 6.6 examines how
+the scale of the STQAD dataset inﬂuences the performance of the QA
+system, testing Guideline (4). Finally, Section 6.7 evaluates the performance impact of LLM when injecting relevant KG facts into prompts.
+
+5.4. Answer ﬁltering module
+
+6.1. Experimental setup
+
+Although our scoring functions have retrieved some potential answers in the STKG, embedding-based KGQA methods exhibit limited
+spatio-temporal reasoning or distance calculation capabilities on STKG.
+To address this issue, we design a Constraint Filter within the Answer
+Filtering Module. This ﬁlter performs temporal and spatial comparisons
+or distance calculations based on the spatio-temporal constraints in
+the questions. We implement explicit rules for temporal and orientation comparisons, and use the Haversine formula [41] to compute geographic distances.
+Speciﬁcally, we apply the constraints obtained from the Preprocessing Module to ﬁlter the potential answers and thus determine the ﬁnal
+results. When a directional constraint appears in the question, the geographic coordinates of each candidate answer are compared with those
+of the spatial clue. In such comparisons, equality on target coordinate
+dimension does not satisfy the requirement; for example, the constraint
+
+6.1.1. Baselines
+Pre-trained language models (PLMs). Research indicates that PLMs contain real-world knowledge and can be directly applied to QA tasks [42,
+43]. In our experiments, we evaluate the performance of three widelyused PLMs: BERT [10], RoBERTa [11], and DistillBERT [12] on the
+STQAD dataset. For each model, we use the pre-trained versions available in the Hugging Face Transformers library3 , with the base conﬁguration (12 layers, 768 hidden dimensions). We concatenate the question embedding generated by the PLM with the spatio-temporal entity
+embeddings from the STKG. This concatenated representation is then
+passed through a learnable projection layer (a fully connected layer
+3 https://huggingface.co
+
+6
+
+Knowledge-Based Systems 329 (2025) 114314
+
+X. Dai et al.
+
+Table 5
+Results for the baselines and our method on the STQAD dataset. GeoQA2* retrieves answers from YAGO2 using SPARQL queries. We apply a
+lenient criterion: if any of the query results (even if the total number of results signiﬁcantly exceeds 10) includes a correct answer, we consider
+the question to be answered correctly. Its result is recorded under the Hits@10 metric.
+Models
+
+Hits@1
+
+Hits@10
+
+Overall
+
+DTC
+
+STC
+
+DDC
+
+SDC
+
+DC
+
+Overall
+
+DTC
+
+STC
+
+DDC
+
+SDC
+
+DC
+
+PLMs
+
+BERT
+RoBERTa
+DistillBERT
+
+30.20
+31.89
+29.63
+
+28.57
+32.14
+25.00
+
+30.24
+31.88
+29.76
+
+31.21
+33.53
+30.06
+
+29.56
+32.04
+27.62
+
+29.86
+27.61
+29.30
+
+60.96
+60.77
+58.23
+
+53.57
+57.14
+53.57
+
+61.16
+60.87
+58.36
+
+59.25
+61.85
+57.23
+
+61.620
+58.29
+57.18
+
+61.97
+62.25
+60.28
+
+LLMs
+
+ChatGPT
+GPT-4o
+Llama3
+GPT-4.5
+Claude-3.7
+DeepSeek-V3
+
+10.35
+13.73
+9.13
+22.48
+20.70
+22.20
+
+10.71
+14.29
+7.14
+17.86
+17.86
+21.43
+
+10.34
+13.72
+9.18
+22.61
+21.74
+22.22
+
+9.54
+15.32
+9.83
+26.01
+22.25
+24.57
+
+11.88
+14.36
+9.39
+21.27
+20.17
+22.93
+
+8.73
+10.42
+7.60
+20.28
+21.13
+19.15
+
+24.65
+25.21
+15.43
+63.02
+60.96
+61.99
+
+25.00
+28.57
+17.86
+50.00
+35.71
+46.42
+
+24.64
+25.12
+15.36
+63.38
+61.64
+62.42
+
+22.25
+27.75
+16.47
+71.97
+65.32
+68.79
+
+25.41
+25.97
+15.47
+63.54
+63.26
+64.92
+
+26.20
+24.97
+14.37
+53.80
+54.37
+52.39
+
+EmbedKGQA
+CronKGQA
+TempoQR
+SubGTR
+MultiQA
+GeoQA2*
+
+37.16
+42.71
+53.06
+55.32
+51.93
+-
+
+35.71
+39.29
+46.43
+50.00
+46.43
+-
+
+37.20
+42.80
+53.24
+55.46
+52.08
+-
+
+38.73
+43.64
+56.36
+57.80
+55.20
+-
+
+37.57
+46.13
+54.14
+58.84
+57.46
+-
+
+32.39
+35.21
+45.07
+36.90
+39.44
+-
+
+61.05
+64.63
+76.11
+78.46
+76.39
+29.72
+
+67.86
+67.86
+75.00
+78.57
+78.57
+28.57
+
+60.87
+64.54
+76.04
+78.45
+76.33
+29.76
+
+60.98
+64.45
+76.01
+78.90
+77.17
+29.48
+
+59.94
+66.02
+75.96
+79.01
+75.69
+29.83
+
+62.25
+63.38
+76.05
+77.46
+76.34
+27.61
+
+STCQA
+
+61.52
+
+60.71
+
+61.55
+
+63.01
+
+63.25
+
+53.52
+
+84.29
+
+82.14
+
+84.38
+
+83.82
+
+82.32
+
+86.76
+
+KGQA models
+
+with 512 output dimensions) to align the dimensions of the question
+and entity embeddings. The resulting embedding is scored using the dot
+product over all entities in the STKG, and the top-k entities with the
+highest scores are selected as candidate answers.
+
+designed based on YAGO2 and can execute SPARQL queries on the terminal. We provide the spatio-temporal questions to the system, which
+then generates queries to ﬁnd answers within YAGO2. We provide entity
+annotations for all PLM and KGQA models, allowing the evaluation results to be independent of the performance of named entity recognition
+and entity linking tools. Appendix B provides more details of experimental settings.
+
+Large language models (LLMs). LLMs with billions of parameters demonstrate strong performance and achieve notable success in QA tasks. In
+our experiments, we ask ChatGPT, GPT-4o4 , Llama3 70B [13], GPT4.5, Claude 3.75 and DeepSeek-V3 [44] to answer questions in STQAD.
+We input the questions directly into these models and request them to
+provide the 10 most probable answers in order of likelihood. If they
+cannot answer, we instruct them to respond with None. In evaluation,
+Tan et al. [45] argues that for LLMs to achieve stable accuracy in KGQA
+tasks, a threshold of at least 0.7 should be applied when comparing
+generated outputs to ground truth. Following this guideline, we adopt
+a Levenshtein similarity threshold of 0.7 based on empirical tests to
+match candidate answers from YAGO2 with the aliases of the correct
+answers. To validate this setting, we sample 100 questions from the
+STQAD test set and manually compute matching accuracy under thresholds {0.6, 0.7, 0.8, 0.9}. We ﬁnd that a threshold of 0.7 yielded the best
+trade-oﬀ between recall and precision for accommodating entity alias
+variation in YAGO2 without over-matching unrelated entities. Thresholds below 0.7 led to a sharp decline in precision due to excessive fuzzy
+matches.
+
+6.1.2. Evaluation metrics
+The KGQA approach typically follows a retrieval and ranking
+paradigm [46–48]. It constructs a subgraph from the KG and ranks all
+entities in the subgraph based on their relevance to the question. For
+fairness and standard of comparison with other QA methods, we adopted
+the hit ratios (HR) used in temporal KGQA task [6,15–17] as the evaluation metric in our study.
+6.2. Overall results
+Table 5 presents a comparative analysis of STCQA against other baselines. Initially, by comparing PLMs with KGQA models utilizing embedding approaches (EmbedKGQA, TempoQR, SubGTR, and MultiQA), we
+observe that even without explicit spatio-temporal information, using
+KG embeddings signiﬁcantly enhances model performance. For example, EmbedKGQA achieves a Hits@1 score of 37.16 %, compared to
+30.20 % for BERT. This suggests that KG embeddings help models focus more eﬀectively on sparsely distributed entities within the STKG,
+enabling better reasoning over the graph structure [14].
+While our baseline setting for LLMs is relatively lenient, these models
+do not perform optimally on spatio-temporal questions. This is because
+answering such questions necessitates precise spatio-temporal information from the STKG. Despite LLMs possessing extensive world knowledge
+and billions of parameters, they still struggle to recall precise information, such as geographic coordinates. Our questions frequently require
+external spatio-temporal factual knowledge, which LLMs cannot handle
+directly.
+A breakdown by constraint type reveals that LLMs and some KGQA
+models perform particularly poorly on reasoning tasks involving spatial
+distances. For instance, GPT-4o’s Hits@1 drops by more than 4 % from
+DDC to DC, indicating signiﬁcant diﬃculty in computing or approximating geographic distances without explicit support from the STKG.
+Similarly, EmbedKGQA lacks spatially-aware embeddings, leading to incorrect entity ranking when directional or distance-based comparisons
+
+KGQA models. EmbedKGQA [14] is a framework for QA over traditional
+KG, so timestamps and coordinates are not used during the pre-training
+of the model. CronKGQA [15] employs a PLM to obtain question embeddings and utilizes a temporal KG embedding scoring function for answer
+prediction. In our experiment, we annotated all time-related entities and
+utilized the model to predict answers. TempoQR [16] utilizes a temporal
+KG embedding-based scoring function for answer prediction and incorporates additional temporal information. Thus, we also incorporate time
+information in STKG into the central entity. SubGTR [17] extracts implicit information from temporal questions and incorporates a semanticaware and temporal inference module into the scoring function, so we
+also provide time clues and time constraints for the model. MultiQA [6]
+reﬁnes the granularity of time representation from Year to Day. Our experiment employed its embedding results for Year. GeoQA2 [33] is also
+4
+
+https://openai.com/index/hello-gpt-4o
+
+5 https://www.anthropic.com/news/claude-3-7-sonnet
+
+7
+
+Knowledge-Based Systems 329 (2025) 114314
+
+X. Dai et al.
+
+are required. Despite its rich parametric knowledge, GPT-4o fails to reliably retrieve precise coordinates or timestamps on demand and cannot
+perform symbolic distance calculations accurately without external tool
+augmentation. EmbedKGQA, the representative embedding-based baseline, is designed for static KGs and does not model temporal timestamps
+or geographic coordinates, rendering it ineﬀective for multi-constraint
+questions that require joint temporal and spatial ﬁltering. These observations highlight two core challenges in STQAD: (1) extracting implicit
+spatio-temporal clues from natural language questions, and (2) performing joint reasoning over heterogeneous modalities-semantic, temporal,
+and spatial-under compositional constraints. We present an example of
+answers by EmbedKGQA and GPT-4o in Appendix E.
+Introducing spatial or temporal information further improves the
+performance of STKGQA. Compared to EmbedKGQA, designed for traditional KGs, spatial or temporal KGQA methods such as CronKGQA, TempoQR, SubGTR, and GeoQA2 show signiﬁcant enhancement, indicating
+that spatio-temporal information is crucial for addressing STKGQA task.
+However, these temporal baselines, which only use temporal vectors,
+neglect spatial information, and their capabilities are signiﬁcantly affected when answers involve spatial information. In Section 6.4, to further evaluate the reasoning potential of these embedding-based KGQA
+methods on STKG, we replace their embedding models with our spatial enhanced embedding method. Furthermore, although our evaluation criterion is lenient, the spatial KGQA method GeoQA2 performs
+poorly in answering spatio-temporal questions. It does not consider temporal information, and its template-based query design lacks ﬂexibility
+when addressing complex questions, making it diﬃcult to comprehend
+sentence semantics. The experimental results indicate that, compared
+to PLMs and LLMs, the STCQA model, which integrates spatio-temporal
+embeddings, can more eﬀectively acquire precise knowledge and complete reasoning on STKG. Compared to traditional KGQA and temporal
+KGQA models, STCQA, which can perform spatio-temporal comparisons
+and distance calculations, excels in reasoning through spatio-temporal
+clues and constraints within STKGs. Our method signiﬁcantly surpasses
+existing benchmarks, establishing itself as a state-of-the-art solution.
+
+indicating that the inherent meaning of entities aﬀects the BERT encoder’s understanding of sentence logic semantics. Furthermore, omitting Spatio-temporal Clue Embedding leads to a 1.78 % performance decline, highlighting the necessity of replacing entities with temporal and
+geographic coordinates in the embedding stage. This approach enables
+the model to comprehend the spatio-temporal information contained in
+the questions. Removing the Constraint Filter results in a 3.57 % performance drop in STCQA, demonstrating that embedding methods alone
+are insuﬃcient for tasks involving the comparison and calculation of
+spatio-temporal clues, thus underscoring the necessity of this step. These
+ablation experiments show that processing the implicit spatio-temporal
+information emphasized in Guideline (2) is crucial to answering
+questions.
+Keeping the input questions unchanged, selectively removing the
+model’s access to temporal or spatial information in the STKG significantly degrades the performance of STCQA. Under the Hits@1 metric,
+the complete removal of spatio-temporal information leads to a performance drop of 31.7 %. In the absence of spatio-temporal information, our embedding module reduces to a standard ComplEx, while the
+Preprocessing and Answer Filtering modules become ineﬀective. This
+leads to a substantial drop in performance, particularly on questions
+requiring temporal or spatial reasoning. These ablation results demonstrate that spatio-temporal knowledge is deeply integrated into all stages
+of STCQA-embedding, retrieval, and ﬁltering-and highlight the model’s
+dependence on such information to accurately answer spatio-temporal
+questions.
+
+6.4. STKG embedding performance
+The embedding-based KGQA models perform poorly on our dataset,
+which we attribute to their embedding methods’ lack of spatial representation of the STKG. Therefore, to evaluate their potential, we replace
+their embedding models with the embedding method proposed in Section 5.3, which is suitable for our STKG. We randomly divide the facts
+in the STKG into training, validation, and test sets in an 8:1:1 ratio and
+assess them using the KG embedding task. We employ the scoring functions ComplEx [39] and TComplEx [38] used in these KGQA models as
+baselines for predicting entities. The results of the STKG embeddings,
+presented in Table 7, indicate that the embedding method incorporating geographical information demonstrates a signiﬁcant advantage over
+existing embedding baselines. Appendix C provides more details of the
+KG embedding experiment.
+Subsequently, we use our embedding method to enhance the KGQA
+baselines, observing performance improvements in all models. Fig. 5 indicates the eﬀectiveness of adding spatial representation for embeddingbased KGQA models.
+
+6.3. Ablation study
+w/o Entity Annotation. During the Preprocessing module (in Section 5.2), entities in the question are not replaced with special tokens.
+w/o Spatio-temporal Clue Embedding. In the Answer Retrieval module (in
+Section 5.3), explicit timestamp and geographic coordinate embeddings
+are not used to replace the output of the BERT encoder.
+w/o Constraint Filter. In the Answer Filtering module (in Section 5.4),
+the answers retrieved from the STKG are used directly, without using
+Constraint Filter to re-verify spatio-temporal clues in the answers. Consequently, no spatio-temporal comparison or distance calculation is conducted.
+
+Table 6
+Ablation study for STCQA.
+
+w/o Temporal Knowledge. We remove all temporal information from the
+facts in the STKG, meaning that temporal clues and constraints are excluded from both training and inference across the Preprocessing, Answer Retrieval, and Answer Filtering stages.
+
+STCQA
+w/o Entity Annotation
+w/o Spatio-temporal Clue Embedding
+w/o Constraint Filter
+w/o Temporal Knowledge
+w/o Spatial Knowledge
+w/o Spatio-temporal Knowledge
+
+w/o Spatial Knowledge. We remove all spatial information from the facts
+in the STKG, such that geographic coordinates and spatial constraints
+are not utilized during Preprocessing, Answer Retrieval, and Answer
+Filtering.
+
+Hit@1
+
+Hit@3
+
+Hit@10
+
+61.52
+60.49
+59.74
+57.95
+37.72
+37.54
+29.82
+
+76.20
+74.97
+73.75
+71.40
+48.17
+49.29
+38.19
+
+84.29
+83.07
+82.22
+81.28
+58.51
+59.45
+46.85
+
+Table 7
+Results for STKG embedding.
+
+w/o Spatio-temporal Knowledge. We remove all spatio-temporal attributes from the STKG facts, eﬀectively disabling the use of both temporal and spatial clues and constraints throughout the entire pipeline.
+The ablation results are shown in Table 6. Based on Hits@1, the absence of Entity Annotation results in a performance decrease of 1.03 %,
+
+ComplEx
+TComplEx
+Ours
+8
+
+Hit@1
+
+Hit@3
+
+Hit@10
+
+21.72
+21.68
+40.71
+
+34.30
+34.75
+48.45
+
+49.96
+50.15
+58.41
+
+Knowledge-Based Systems 329 (2025) 114314
+
+X. Dai et al.
+
+Fig. 5. Performance (Hits@10) of embedding-based KGQA baselines on STQAD using diﬀerent embedding models.
+
+Fig. 6. Model performance (Hits@10) on diﬀerent spatio-temporal constraint relevance dataset.
+
+Fig. 7. Model performance (Hits@10) vs. dataset size for STCQA, TempoQR and SubGTR.
+
+6.5. Eﬀect of spatio-temporal constraint relevance
+
+6.6. Eﬀect of dataset size
+
+The correlation between spatio-temporal constraints and central
+facts is a signiﬁcant indicator for evaluating dataset quality. As Guideline(3) states, using irrelevant entities in the question does not reﬂect
+real-world scenarios. We replace the original fact in the question with
+another fact that satisﬁes the constraints but is more than 2 hops away
+from the central fact. This process allowed us to construct a dataset
+consisting of low co-occurrence entities (such as Einstein and the 25th
+Academy Awards). As shown in Fig. 6, we train and evaluate some
+KGQA models on this dataset, observing a decline in performance. This
+decline indicates that low-quality data not only fails to meet user requests but also provides limited assistance in enhancing the QA system’s
+performance.
+
+As stated in Guideline (4), larger datasets typically oﬀer a greater
+number of training samples, a crucial factor in training accurate and
+generalizable models. Fig. 7 illustrates the impact of dataset size on
+model performance. Increasing the training dataset size from 10 % to
+100 % leads to a steady improvement in model performance. This trend
+remains consistent across diﬀerent models, validating the eﬀectiveness
+of a large-scale dataset for training STKGQA models.
+Similarly, a larger test dataset can yield more reliable and statistically signiﬁcant evaluation results. With a ﬁxed training dataset size, we
+progressively enlarge the validation set and test set from 10 % to 100 %.
+The results obtained from the test dataset demonstrate that employing
+a larger amount of evaluation data is advantageous for ascertaining a
+9
+
+Knowledge-Based Systems 329 (2025) 114314
+
+X. Dai et al.
+
+ing them less eﬃcient than the end-to-end STCQA framework in applications (Fig. E.10, Table 6)
+
+Knowledge Injection Prompt
+Below are the facts that might be relevant to answer the question,
+provide the 10 most probable answers in order of likelihood.
+Facts: {facts (linearized triples or natural language paragraphs)}
+Question: {question}
+Answer:
+
+7. Conclusion and future work
+In this paper, we introduce STQAD, a new dataset for STKGQA. While
+there have been numerous KGs based on spatio-temporal information,
+the existing KGQA datasets lack discussions regarding scenarios involving spatio-temporal information for reasoning. To the best of our knowledge, STQAD is the ﬁrst dataset that comprises a substantial number
+of questions that necessitate both temporal and spatial inference. To
+ensure the realistic situation of the questions in the dataset, we employ strict constraints during question generation. The availability of
+large datasets enables model evaluation and presents an opportunity
+for model training. Additionally, we propose a novel method, STCQA,
+serving as a strong baseline for follow-up research. Due to the limited
+number of facts in the current STKG, some data imbalances persist, as
+shown in Table 3. Nevertheless, we have made a signiﬁcant ﬁrst step in
+this ﬁeld. In the future, we plan to extend our task to larger-scale STKGs
+and further design an STKGQA approach based on LLMs.
+
+more stable performance across various QA methods implemented on
+STQAD.
+6.7. The impact of knowledge injection on LLM performance
+Since STCQA explicitly leverages structured knowledge from the
+STKG, while LLMs are typically provided only with the question text
+during inference, a potential evaluation imbalance arises. To address
+this discrepancy and establish a more favorable setting for the LLM, we
+directly supply it with the 2-hop subgraph extended from the Central
+Fact during data generation and that contains the correct answer, as
+illustrated in Fig. 2. This approach eliminates the need for the LLMs
+to perform retrieval over the STKG, thereby isolating their capabilities
+from the performance of the retriever. We adopt two prompting strategies from prior studies: (1) presenting the subgraph as a sequence of linearized triples ranked by semantic similarity to the question [49], computed using BERT-based scoring; and (2) ﬁrst converting the triples into
+ﬂuent natural language paragraphs using the method in Wu et al. [50],
+then feeding the text to the LLM. The ﬁnal prompt template is as follows:
+
+CRediT authorship contribution statement
+Xinbang Dai: Writing – original draft, Software, Methodology, Investigation, Data curation; Huiying Li: Writing – review & editing,
+Methodology; Nan Hu: Writing – review & editing, Investigation; Yongrui Chen: Writing – review & editing, Supervision; Rihui Jin: Writing
+– review & editing; Huikang Hu: Validation, Software; Guilin Qi: Supervision, Funding acquisition.
+
+As shown in Table 8, explicitly injecting relevant spatio-temporal
+facts yields substantial gains for all three LLMs. For example, GPT4o’s Hit@1 increases from 13.73 % to 35.18 % when provided with
+linearized triples, and further to 41.20 % with natural language paragraphs. The improvement is consistent across Hit@3 and Hit@10, indicating that augmenting LLM prompts with factual STKG context reduces the burden of open-ended retrieval and helps models focus on
+constraint reasoning. Notably, converting triples into natural language
+consistently outperforms linearized triples, suggesting that LLMs beneﬁt from semantically ﬂuent and contextually coherent representations
+of KG facts.
+However, even with these favorable settings, LLM performance remains well below that of STCQA. The main gap stems from LLMs’ diﬃculty in executing precise temporal and spatial computations: they must
+not only judge fact relevance but also reason based on timestamps and
+geographic distances or orientations under compositional constraints.
+Without tool integration, such symbolic and numerical reasoning often
+remains in error. We anticipate that further bridging this gap will require hybrid approaches-equipping LLMs with dedicated reasoning tools
+(e.g., temporal comparators, spatial calculators) and training them to invoke these tools appropriately. While promising, such tool-augmented
+pipelines introduce additional API calls and longer response times, mak-
+
+Data availability
+Data will be made available on request.
+Declaration of competing interest
+The authors declare that they have no known competing ﬁnancial
+interests or personal relationships that could have appeared to inﬂuence
+the work reported in this paper.
+Acknowledgements
+This work is supported by the Natural Science Foundation of
+China (grant no U21A20488). We thank the Big Data Computing Center
+of Southeast University for providing the facility support on the numerical calculations in this paper.
+Appendix A. Seed procedure
+As shown in Fig. A.8, each Seed Template corresponds to a Seed
+Procedure. After obtaining the central fact, spatio-temporal clues, and
+constraints, we incorporate them into the Seed Procedure to form an
+Executable Procedure.
+The format of the Executable Procedure is deﬁned by YAGO2 [1],
+and it can be rewritten into SPARQL queries to retrieve answers from
+the STKG. During the Answer Veriﬁcation process (in Section 4.2.3),
+this method helps retrieve the correct answers within the STKG. Additionally, by masking the temporal or spatial constraint in the Constraint
+Procedure, we can observe changes in the number of answers to determine the eﬀectiveness of our spatio-temporal constraints.
+
+Table 8
+Results for the LLMs with external knowledge.
+Hit@1
+
+Hit@3
+
+Hit@10
+
+ChatGPT
+ChatGPT + Linearized Triples
+ChatGPT + Natural Language Paragraphs
+
+10.35
+35.18
+40.07
+
+17.22
+52.30
+56.48
+
+24.65
+68.11
+72.24
+
+GPT-4o
+GPT-4o + Linearized Triples
+GPT-4o + Natural Language Paragraphs
+
+13.73
+35.74
+41.20
+
+19.29
+53.63
+58.14
+
+25.21
+69.45
+73.28
+
+Llama3
+Llama3 + Linearized Triples
+Llama3 + Natural Language Paragraphs
+
+9.13
+21.35
+23.05
+
+11.48
+32.17
+34.52
+
+15.43
+45.34
+47.88
+
+Appendix B. Implementation details
+For STKG embedding, the embedding dimension D = 512. The
+model’s parameters are updated using Adagrad [51] with a learning rate
+10
+
+Knowledge-Based Systems 329 (2025) 114314
+
+X. Dai et al.
+
+Fig. A.8. Examples of our seed procedures. Example (a) illustrates distance calculation. We use the Distance Calculator based on the Haversine formula to verify
+geographical constraints. Example (b) demonstrates orientation comparison, where our program can compare all constraints.
+
+of 0.1 [38]. The training batch size is 1,000. Our embedding method undergoes training for 50 epochs, and the ﬁnal parameters are determined
+based on the best validation performance. During STKGQA, the parameters of the pre-trained language model and the STKG embeddings remain unchanged. The layer number of Transformer is 2 with 4 heads per
+layer. The model’s parameters are updated using Kingma and Ba [52]
+with a learning rate 2e-5. The training batch size is 150, and the number of epochs is 60. The model updates its parameters by minimizing
+the cross-entropy loss function, aiming to assign a higher probability to
+the correct answers.
+
+train and test data. All embedding methods are trained on the STKG for
+the completion task.
+Appendix D. More statistics and detials of STQAD
+There are 8092 unique entities in our questions. In Fig. D.9(a),
+we present the 10 most common entities and their fractions. The
+distribution of entities within the questions is uniform, indicating the
+rich representation and no data imbalance in STQAD. Fig. D.9(b) displays a sunburst of the ﬁrst 3 words in the questions, showing that questions typically begin with Which, After, Can, What, and Where. Common
+topics include country, team, club, and university. Additionally, Table D.9
+provides more examples of questions.
+
+Appendix C. KG embedding
+ComplEx [39] represents each entity 𝑒 and relation 𝑟 as complex
+vectors 𝐞 and 𝐫, respectively. The score 𝜙𝐶 of a fact (𝑠, 𝑟, 𝑜) is
+(
+)
+(⟨
+⟩)
+𝜙𝐶 𝐞𝑠 , 𝐫, 𝐞𝑜 = Re 𝐞𝑠 , 𝐫, 𝐞𝑜
+
+E. Case study
+As shown in Fig. E.10, GPT-4o fails to recognize the spatio-temporal
+constraints contained in the question and instead treats the query as
+ambiguous, refraining from performing reasoning and producing only
+speculative candidate answers. EmbedKGQA, which cannot model or
+interpret spatio-temporal constraints, retrieves entities based solely on
+static relational patterns, returning a list of clubs that the player has
+been associated with throughout their career, without considering the
+temporal or spatial conditions speciﬁed in the question. These failure
+cases underscore the limitations of both models in handling constrained
+spatiotemporal reasoning, whether due to insuﬃcient grounding in
+spatio-temporal knowledge or the absence of explicit spatio-temporal
+constraint-aware mechanisms.
+
+where Re(.) denotes the real part, (.) is the complex conjugate of the
+embedding vector. TComplEx [38] is an extension of the ComplEx KG
+embedding method designed for TKGs. TComplEx represents each timestamp 𝑡 as a complex vector 𝐭 and the score 𝜙𝑇 of a fact (𝑠, 𝑟, 𝑜, 𝑡) is
+(
+)
+(⟨
+⟩)
+𝜙𝑇 𝐞𝑠 , 𝐫, 𝐞𝑜 , 𝐭 = Re 𝐞𝑠 , 𝐫 ⊙ 𝐭, 𝐞𝑜
+where ⊙ is the element-wise product.
+Since ComplEx and TComplEx’s scoring functions cannot predict
+timestamps and geographic coordinates, for a fair comparison with
+our embedding method, we only randomly mask entities in facts to
+generate
+
+11
+
+Knowledge-Based Systems 329 (2025) 114314
+
+X. Dai et al.
+
+Fig. D.9. More Statistics of STQAD.
+Table D.9
+Some representative template questions generated from seed templates.
+Relation
+
+Template question
+
+Paraphrased question
+
+<livesIn>
+
+<Akkineni_Nagarjuna> lives in which place within
+310 miles of <Bengalore> later than the cessation of
+<Berlin_International_Film_Festival>?
+
+Following the Berlin International Film Festival, where
+is Akkineni Nagarjuna’s residence located, 310 miles
+away from Bangalore?
+
+<memberOf>
+
+Can you give me the academy that <Germain_Bazin>
+is a member of the northeast of <Upper_seine> after
+leading <Department_of_Paintings_of_the_Louvre>?
+
+Which academy is Germain Bazin a member of located
+to the northeast of the Upper Seine following his tenure
+at the Department of Paintings of the Louvre?
+
+<dealsWith>
+
+Before <Kosovo War>, <Kosovo> have business deal
+with which countries southeast of it?
+
+Prior to the Kosovo War, with which countries to the
+southeast did Kosovo have business dealings?
+
+<isCitizenOf>
+
+After <World War II>, <Paul Schäfer> became a citizen of which country southeast of <Germany>.
+
+Following World War II, which country to the southeast
+of Germany did Paul Schäfer become a citizen of?
+
+<isPoliticianOf>
+
+Give me the place that <George_W._Bush> leads west
+of <Oklahoma> before <the War in Afghanistan>.
+
+Before the War in Afghanistan, where did George W.
+Bush lead west of Oklahoma?
+
+<graduatedFrom>
+
+<Barack_Obama> be educated by which university
+within 300 miles of <New_York> after working for
+<Business_International_Corporation>?
+
+Which university within 300 miles of New York did
+Barack Obama attend after employment at Business International Corporation?
+
+Fig. E.10. An example of EmbedKGQA and GPT-4o answers.
+12
+
+Knowledge-Based Systems 329 (2025) 114314
+
+X. Dai et al.
+
+References
+
+[27] S.W.-t. Yih, M.-W. Chang, X. He, J. Gao, Semantic parsing via staged query graph
+generation: question answering with knowledge base, in: Proceedings of the Joint
+Conference of the 53rd Annual Meeting of the ACL and the 7th International Joint
+Conference on Natural Language Processing of the AFNLP, 2015, p. 1321–1331.
+[28] Y. Hao, Y. Zhang, K. Liu, S. He, Z. Liu, H. Wu, J. Zhao, An end-to-end model for question answering over knowledge base with cross-attention combining global knowledge, in: Proceedings of the 55th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), 2017, pp. 221–231.
+[29] D. Lukovnikov, A. Fischer, J. Lehmann, S. Auer, Neural network-based question
+answering over knowledge graphs on word and character level, in: Proceedings of
+the 26th International Conference on World Wide Web, 2017, pp. 1211–1220.
+[30] T. Févry, L.B. Soares, N. FitzGerald, E. Choi, T. Kwiatkowski, Entities as experts:
+sparse memory access with entity supervision, in: Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP), 2020,
+pp. 4937–4951.
+[31] X. Ye, S. Yavuz, K. Hashimoto, Y. Zhou, C. Xiong, RNG-KBQA: generation augmented
+iterative ranking for knowledge base question answering, in: Proceedings of the 60th
+Annual Meeting of the Association for Computational Linguistics (Volume 1: Long
+Papers), 2023, pp. 6032–6043.
+[32] X. Huang, S. Cheng, Y. Shu, Y. Bao, Y. Qu, Question decomposition tree for answering complex questions over knowledge bases, in: Proceedings of the AAAI Conference on Artiﬁcial Intelligence, volume 37, 2023, pp. 12924–12932.
+[33] D. Punjani, S.-A. Kefalidis, K. Plas, E. Tsalapati, M. Koubarakis, P. Maret, The
+question answering system geoQA2, in: 2nd International Workshop on Geospatial
+Knowledge Graphs and GeoAI: Methods, Models, and Resources, 2023, pp. 17–25.
+[34] D. Punjani, M. Koubarakis, E. Tsalapati, EarthQA: a question answering engine for
+earth observation data archives, in: IGARSS 2023-2023 IEEE International Geoscience and Remote Sensing Symposium, 2023, pp. 1396–1399.
+[35] Z. Yin, C. Zhang, D.W. Goldberg, S. Prasad, An NLP-based question answering framework for spatio-temporal analysis and visualization, in: Proceedings of the 2019 2nd
+International Conference on Geoinformatics and Data Analysis, 2019, pp. 61–65.
+[36] S. Schweter, A. Akbik, Flert: document-level features for named entity recognition,
+arXiv:2011.06993 (2020).
+[37] L. Wu, F. Petroni, M. Josifoski, S. Riedel, L. Zettlemoyer, Scalable zero-shot entity linking with dense entity retrieval, in: Proceedings of the 2020 Conference on
+Empirical Methods in Natural Language Processing (EMNLP), 2020, pp. 6397–6407.
+[38] T. Lacroix, G. Obozinski, N. Usunier, Tensor decompositions for temporal knowledge
+base completion, arXiv:2004.04926 (2020).
+[39] T. Trouillon, J. Welbl, S. Riedel, É. Gaussier, G. Bouchard, Complex embeddings
+for simple link prediction, in: International Conference on Machine Learning, 2016,
+pp. 2071–2080.
+[40] A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A.N. Gomez, Ł. Kaiser,
+I. Polosukhin, Attention is all you need, Adv. Neural Inf. Process. Syst. 30 (2017).
+[41] C.C. Robusto, The cosine-haversine formula, Am. Math. Month. 64 (1) (1957) 38–40.
+[42] F. Petroni, T. Rocktäschel, S. Riedel, P. Lewis, A. Bakhtin, Y. Wu, A. Miller,
+Language models as knowledge bases?, in: Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP), 2019,
+pp. 2463–2473.
+[43] C. Raﬀel, N. Shazeer, A. Roberts, K. Lee, S. Narang, M. Matena, Y. Zhou, W. Li,
+P.J. Liu, Exploring the limits of transfer learning with a uniﬁed text-to-text transformer, J. Mach. Learn. Res. 21 (140) (2020) 1–67.
+[44] A. Liu, B. Feng, B. Xue, B. Wang, B. Wu, C. Lu, C. Zhao, C. Deng, C. Zhang, C. Ruan,
+et al., Deepseek-v3 technical report, arXiv:2412.19437 (2024).
+[45] Y. Tan, D. Min, Y. Li, W. Li, N. Hu, Y. Chen, G. Qi, Can chatGPT replace traditional
+KBQA models? An in-depth analysis of the question answering performance of the
+GPT LLM family, in: International Semantic Web Conference, 2023, pp. 348–367.
+[46] A. Miller, A. Fisch, J. Dodge, A.-H. Karimi, A. Bordes, J. Weston, Key-value
+memory networks for directly reading documents,
+in: Proceedings of the
+2016 Conference on Empirical Methods in Natural Language Processing, 2016,
+pp. 1400–1409.
+[47] Y. Zhang, H. Dai, Z. Kozareva, A. Smola, L. Song, Variational reasoning for question answering with knowledge graph, in: Proceedings of the AAAI Conference on
+Artiﬁcial Intelligence, volume 32, 2018, pp. 6069–6076.
+[48] A. Saxena, A. Tripathi, P. Talukdar, Improving multi-hop question answering
+over knowledge graphs using knowledge base embeddings, in: Proceedings of
+the 58th Annual Meeting of the Association for Computational Linguistics, 2020,
+pp. 4498–4507.
+[49] J. Baek, A.F. Aji, A. Saﬀari, Knowledge-augmented language model prompting for zero-shot knowledge graph question answering, in: Proceedings of the
+First Workshop on Matching From Unstructured and Structured Data, 2023,
+pp. 70–98.
+[50] Y. Wu, N. Hu, G. Qi, S. Bi, J. Ren, A. Xie, W. Song, Retrieve-rewrite-answer: a
+KG-to-text enhanced LLMS framework for knowledge graph question answering,
+arXiv:2309.11206 (2023).
+[51] J. Duchi, E. Hazan, Y. Singer, Adaptive subgradient methods for online learning and
+stochastic optimization, J. Mach. Learn. Res. 12 (7) (2011).
+[52] D.P. Kingma, J. Ba, Adam: a method for stochastic optimization, arXiv:1412.6980
+(2014).
+
+[1] J. Hoﬀart, F.M. Suchanek, K. Berberich, G. Weikum, Yago2: a spatially and temporally enhanced knowledge base from wikipedia, Artif. Intell. 194 (2013) 28–61.
+[2] X. Zhang, X. Zhu, J. Wu, Z. Hu, C. Zhang, A framework of data fusion through spatiotemporal knowledge graph, in: International Conference on Knowledge Science,
+Engineering and Management, 2021, pp. 216–228.
+[3] S. Gottschalk, E. Demidova, EventKG–the hub of event knowledge on the web–and
+biographical timeline generation, Semant. Web 10 (6) (2019) 1039–1070.
+[4] L. Zhao, H. Deng, L. Qiu, S. Li, Z. Hou, H. Sun, Y. Chen, Urban multi-source spatiotemporal data analysis aware knowledge graph embedding, Symmet. (Basel) 12 (2)
+(2020) 199.
+[5] P.H.F. Stringhini, J.C. dos Reis, Spatio-Temporal Question Answering Based on RDF
+Knowledge Bases, 2019, . Bachelor’s thesis, State University of Campinas.
+[6] Z. Chen, J. Liao, X. Zhao, Multi-granularity temporal question answering over
+knowledge graphs, in: Proceedings of the 61st Annual Meeting of the Association
+for Computational Linguistics (Volume 1: Long Papers), 2023, pp. 11378–11392.
+[7] S.-A. Kefalidis, D. Punjani, E. Tsalapati, K. Plas, M. Pollali, M. Mitsios, M. Tsokanaridou, M. Koubarakis, P. Maret, Benchmarking geospatial question answering engines
+using the dataset geoquestions1089, in: International Semantic Web Conference,
+2023, pp. 266–284.
+[8] A. García-Durán, S. Dumancic, M. Niepert, Learning sequence encoders for temporal knowledge graph completion, in: Conference on Empirical Methods in Natural
+Language Processing, 2018, pp. 562–572.
+[9] F.M. Suchanek, M. Alam, T. Bonald, L. Chen, P.-H. Paris, J. Soria, Yago 4.5: a
+large and clean knowledge base with a rich taxonomy, in: Proceedings of the 47th
+International ACM SIGIR Conference on Research and Development in Information
+Retrieval, 2024, pp. 131–140.
+[10] J. Devlin, M.-W. Chang, K. Lee, K. Toutanova, Bert: pre-training of deep bidirectional
+transformers for language understanding, arXiv:1810.04805 (2018).
+[11] Y. Liu, M. Ott, N. Goyal, J. Du, M. Joshi, D. Chen, O. Levy, M. Lewis, L. Zettlemoyer, V. Stoyanov, Roberta: a robustly optimized bert pretraining approach,
+arXiv:1907.11692 (2019).
+[12] V. Sanh, DistilBERT, a distilled version of BERT: smaller, faster, cheaper and lighter,
+arXiv:1910.01108 (2019).
+[13] A. Dubey, A. Jauhri, A. Pandey, A. Kadian, A. Al-Dahle, A. Letman, A. Mathur,
+A. Schelten, A. Yang, A. Fan, et al., The llama 3 herd of models, arXiv:2407.21783
+(2024).
+[14] S. Hu, L. Zou, J.X. Yu, H. Wang, D. Zhao, Answering natural language questions by
+subgraph matching over knowledge graphs, IEEE Trans. Knowl. Data Eng. 30 (5)
+(2017) 824–837.
+[15] A. Saxena, S. Chakrabarti, P. Talukdar, Question answering over temporal knowledge graphs, in: Proceedings of the 59th Annual Meeting of the Association for
+Computational Linguistics and the 11th International Joint Conference on Natural
+Language Processing (Volume 1: Long Papers), 2021, pp. 6663–6676.
+[16] C. Mavromatis, P.L. Subramanyam, V.N. Ioannidis, A. Adeshina, P.R. Howard,
+T. Grinberg, N. Hakim, G. Karypis, Tempoqr: temporal question reasoning over
+knowledge graphs, in: Proceedings of the AAAI Conference on Artiﬁcial Intelligence,
+volume 36, 2022, pp. 5825–5833.
+[17] Z. Chen, X. Zhao, J. Liao, X. Li, E. Kanoulas, Temporal knowledge graph question
+answering via subgraph reasoning, Knowl. Base. Syst. (2022) 109134.
+[18] Q. Ning, H. Wu, R. Han, N. Peng, M. Gardner, D. Roth, Torque: a reading comprehension dataset of temporal ordering questions, in: Proceedings of the 2020
+Conference on Empirical Methods in Natural Language Processing (EMNLP), 2020,
+pp. 1158–1172.
+[19] Z. Jia, A. Abujabal, R. Saha Roy, J. Strötgen, G. Weikum, Tempquestions: a benchmark for temporal question answering, in: Companion Proceedings of the The Web
+Conference 2018, 2018, pp. 1057–1062.
+[20] J. Berant, A. Chou, R. Frostig, P. Liang, Semantic parsing on freebase from questionanswer pairs, in: Proceedings of the 2013 Conference on Empirical Methods in
+Natural Language Processing, 2013, pp. 1533–1544.
+[21] Q. Cai, A. Yates, Large-scale semantic parsing via schema matching and lexicon
+extension, in: Proceedings of the 51st Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), 2013, pp. 423–433.
+[22] J. Bao, N. Duan, Z. Yan, M. Zhou, T. Zhao, Constraint-based question answering
+with knowledge graph, in: Proceedings of COLING 2016, the 26th international
+Conference on Computational Linguistics: Technical Papers, 2016, pp. 2503–2514.
+[23] S. Davis, P.S. Meltzer, Geoquery: a bridge between the gene expression omnibus
+(geo) and bioconductor, Bioinformatics 23 (14) (2007) 1846–1847.
+[24] H. Xu, E. Hamzei, E. Nyamsuren, H. Kruiger, S. Winter, M. Tomko, S. Scheider,
+Extracting interrogative intents and concepts from geo-analytic questions, AGILE:
+GISci. Ser. 1 (2020) 23.
+[25] D. Punjani, K. Singh, A. Both, M. Koubarakis, I. Angelidis, K. Bereta, T. Beris, D. Bilidas, T. Ioannidis, N. Karalis, et al., Template-based question answering over linked
+geospatial data, in: Proceedings of the 12th Workshop on Geographic Information
+Retrieval, 2018, pp. 1–10.
+[26] S.-A. Kefalidis, D. Punjani, E. Tsalapati, K. Plas, M.-A. Pollali, P. Maret,
+M. Koubarakis, The question answering system geoqa2 and a new benchmark for
+its evaluation, Int. J. Appl. Earth Obs. Geoinf. 134 (2024) 104203.
+
+13
+
+
