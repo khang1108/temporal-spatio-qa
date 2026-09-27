@@ -9,3 +9,4 @@ __pycache__/
 
 # Cached embeddings
 data/cached_embeddings/
+.venv/

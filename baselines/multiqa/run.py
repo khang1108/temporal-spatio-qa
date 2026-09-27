@@ -66,7 +66,7 @@ def extract_batch_entities(raw_items, entity2id, device):
             torch.tensor(time_ids, dtype=torch.long, device=device))
 
 
-def evaluate(model, dataloader, id2entity, entity2id, dataset_items, device, k=10):
+def evaluate(model, dataloader, id2entity, entity2id, dataset_items, device, k=10, return_details=False):
     model.eval()
     all_predictions = []
 
@@ -83,6 +83,10 @@ def evaluate(model, dataloader, id2entity, entity2id, dataset_items, device, k=1
             for indices in topk_indices:
                 cand_names = [id2entity.get(idx, f"<unk_{idx}>") for idx in indices]
                 all_predictions.append(cand_names)
+
+    if return_details:
+        results, sample_details, failure_summary = evaluate_benchmark(all_predictions, dataset_items, return_details=True)
+        return results, all_predictions, sample_details, failure_summary
 
     results = evaluate_benchmark(all_predictions, dataset_items)
     return results, all_predictions
@@ -178,21 +182,39 @@ def main():
     elif os.path.exists(best_checkpoint):
         load_model_checkpoint(model, "multiqa", checkpoint_path=best_checkpoint, url=args.checkpoint_url, device=device)
 
-    test_results, test_preds = evaluate(model, test_loader, id2entity, entity2id, test_data, device)
+    test_results, test_preds, sample_details, failure_summary = evaluate(
+        model, test_loader, id2entity, entity2id, test_data, device, return_details=True
+    )
 
     pred_file = os.path.join(args.pred_dir, "multiqa_test_preds.json")
     with open(pred_file, "w", encoding="utf-8") as f:
         json.dump({
             "model": "MultiQA",
             "metrics": test_results,
-            "predictions": test_preds
+            "failure_summary": failure_summary,
+            "predictions": test_preds,
+            "sample_details": sample_details
         }, f, indent=2)
 
     print("\n" + "=" * 50)
     print("MultiQA Final Test Evaluation on STQAD:")
     print("=" * 50)
     print(format_table5_markdown(test_results, model_name="MultiQA"))
-    print(f"Predictions saved to {pred_file}")
+    print("-" * 50)
+    print("Error & Failure Analysis Summary:")
+    print(f"Total Test Questions: {failure_summary['total_samples']}")
+    print(f"Failed Hits@1:  {failure_summary['total_failed_hit1']} ({(failure_summary['total_failed_hit1']/failure_summary['total_samples'])*100:.1f}%)")
+    print(f"Failed Hits@10: {failure_summary['total_failed_hit10']} ({(failure_summary['total_failed_hit10']/failure_summary['total_samples'])*100:.1f}%)")
+    print("\nFailures by Constraint (Missed in Top 10):")
+    for t_k, t_v in failure_summary['failed_by_temporal'].items():
+        total_t = test_results.get(t_k, {}).get("count", 0)
+        pct = (t_v / total_t * 100) if total_t > 0 else 0
+        print(f"  - {t_k}: {t_v}/{total_t} questions failed ({pct:.1f}%)")
+    for s_k, s_v in failure_summary['failed_by_spatial'].items():
+        total_s = test_results.get(s_k, {}).get("count", 0)
+        pct = (s_v / total_s * 100) if total_s > 0 else 0
+        print(f"  - {s_k}: {s_v}/{total_s} questions failed ({pct:.1f}%)")
+    print(f"\nDetailed per-question predictions & failure logs saved to: {pred_file}")
 
 
 if __name__ == "__main__":

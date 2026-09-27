@@ -8,7 +8,7 @@ Computes Hits@1, Hits@3, and Hits@10 overall and broken down by constraint types
 - DC: Distance Constraint
 """
 
-from typing import List, Dict, Any, Union, Set
+from typing import List, Dict, Any, Union, Set, Tuple
 from collections import defaultdict
 
 
@@ -64,11 +64,22 @@ def compute_hits_at_k(predictions: List[List[str]],
 
 
 def evaluate_benchmark(predictions: List[List[str]],
-                       dataset: List[Dict[str, Any]]) -> Dict[str, Any]:
+                       dataset: List[Dict[str, Any]],
+                       return_details: bool = False) -> Union[Dict[str, Any], Tuple[Dict[str, Any], List[Dict[str, Any]], Dict[str, Any]]]:
     """
     Full evaluation breakdown matching Table 5 of Dai et al. (KBS 2025).
     dataset items contain: 'question', 'answers' (or 'answers' list).
     predictions: list of top-K predicted entity strings for each sample.
+
+    Args:
+        predictions: Top-K predicted entities for each question
+        dataset: List of dataset dicts containing questions and answers
+        return_details: If True, also returns (sample_details, failure_summary)
+
+    Returns:
+        results: Dictionary of metrics per constraint bucket
+        sample_details (optional): Per-sample breakdown with pass/fail and gold rank
+        failure_summary (optional): Summary statistics on where models failed
     """
     assert len(predictions) == len(dataset), f"Length mismatch: {len(predictions)} vs {len(dataset)}"
 
@@ -82,9 +93,13 @@ def evaluate_benchmark(predictions: List[List[str]],
         "DC": {"preds": [], "gts": []},
     }
 
-    for pred, item in zip(predictions, dataset):
+    sample_details = []
+
+    for idx, (pred, item) in enumerate(zip(predictions, dataset)):
         gt = item["answers"]
+        target_set: Set[str] = set([gt]) if isinstance(gt, str) else set(gt)
         q = item.get("question", "")
+        paraphrased_q = item.get("paraphrased_question", "")
         constraints = classify_question_constraints(q)
 
         # Overall
@@ -103,6 +118,32 @@ def evaluate_benchmark(predictions: List[List[str]],
             buckets[s_type]["preds"].append(pred)
             buckets[s_type]["gts"].append(gt)
 
+        # Per-sample rank and hit calculation
+        gold_rank = None
+        for r, p in enumerate(pred, start=1):
+            if p in target_set:
+                gold_rank = r
+                break
+
+        is_hit_1 = (gold_rank == 1)
+        is_hit_3 = (gold_rank is not None and gold_rank <= 3)
+        is_hit_10 = (gold_rank is not None and gold_rank <= 10)
+
+        sample_details.append({
+            "sample_id": idx,
+            "question": q,
+            "paraphrased_question": paraphrased_q,
+            "gold_answers": list(target_set),
+            "top_predictions": pred[:10],
+            "gold_rank": gold_rank,
+            "is_hit_1": is_hit_1,
+            "is_hit_3": is_hit_3,
+            "is_hit_10": is_hit_10,
+            "status": "PASS_HIT1" if is_hit_1 else ("PASS_HIT10" if is_hit_10 else "FAIL"),
+            "temporal_constraint": constraints["temporal"],
+            "spatial_constraint": constraints["spatial"],
+        })
+
     results = {}
     for cat, data in buckets.items():
         if len(data["preds"]) > 0:
@@ -117,6 +158,24 @@ def evaluate_benchmark(predictions: List[List[str]],
             }
         else:
             results[cat] = {"count": 0, "Hits@1": 0.0, "Hits@3": 0.0, "Hits@10": 0.0}
+
+    failure_summary = {
+        "total_samples": len(dataset),
+        "total_failed_hit1": sum(1 for s in sample_details if not s["is_hit_1"]),
+        "total_failed_hit10": sum(1 for s in sample_details if not s["is_hit_10"]),
+        "failed_by_temporal": {
+            "DTC": sum(1 for s in sample_details if not s["is_hit_10"] and s["temporal_constraint"] == "DTC"),
+            "STC": sum(1 for s in sample_details if not s["is_hit_10"] and s["temporal_constraint"] == "STC"),
+        },
+        "failed_by_spatial": {
+            "DC": sum(1 for s in sample_details if not s["is_hit_10"] and s["spatial_constraint"] == "DC"),
+            "DDC": sum(1 for s in sample_details if not s["is_hit_10"] and s["spatial_constraint"] == "DDC"),
+            "SDC": sum(1 for s in sample_details if not s["is_hit_10"] and s["spatial_constraint"] == "SDC"),
+        }
+    }
+
+    if return_details:
+        return results, sample_details, failure_summary
 
     return results
 
