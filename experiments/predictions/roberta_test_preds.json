@@ -1,0 +1,163 @@
+{
+  "model": "RoBERTa-base",
+  "metrics": {
+    "Overall": {
+      "count": 10,
+      "Hits@1": 0.0,
+      "Hits@3": 0.0,
+      "Hits@10": 0.0
+    },
+    "DTC": {
+      "count": 0,
+      "Hits@1": 0.0,
+      "Hits@3": 0.0,
+      "Hits@10": 0.0
+    },
+    "STC": {
+      "count": 10,
+      "Hits@1": 0.0,
+      "Hits@3": 0.0,
+      "Hits@10": 0.0
+    },
+    "DDC": {
+      "count": 3,
+      "Hits@1": 0.0,
+      "Hits@3": 0.0,
+      "Hits@10": 0.0
+    },
+    "SDC": {
+      "count": 3,
+      "Hits@1": 0.0,
+      "Hits@3": 0.0,
+      "Hits@10": 0.0
+    },
+    "DC": {
+      "count": 4,
+      "Hits@1": 0.0,
+      "Hits@3": 0.0,
+      "Hits@10": 0.0
+    }
+  },
+  "predictions": [
+    [
+      "<Clackamas_County,_Oregon>",
+      "<The_Samuel_Goldwyn_Company>",
+      "<Beasts_of_the_Southern_Wild>",
+      "<The_Bourne_Ultimatum_(film)>",
+      "<Oak_Park,_Illinois>",
+      "<India>",
+      "<University_of_Adelaide>",
+      "<University_of_Idaho>",
+      "<Tbilisi>",
+      "<Kiel>"
+    ],
+    [
+      "<Clackamas_County,_Oregon>",
+      "<The_Samuel_Goldwyn_Company>",
+      "<Beasts_of_the_Southern_Wild>",
+      "<India>",
+      "<The_Bourne_Ultimatum_(film)>",
+      "<University_of_Adelaide>",
+      "<University_of_Idaho>",
+      "<Oak_Park,_Illinois>",
+      "<Kiel>",
+      "<Ramones>"
+    ],
+    [
+      "<Clackamas_County,_Oregon>",
+      "<The_Samuel_Goldwyn_Company>",
+      "<Beasts_of_the_Southern_Wild>",
+      "<Oak_Park,_Illinois>",
+      "<The_Bourne_Ultimatum_(film)>",
+      "<Tbilisi>",
+      "<University_of_Idaho>",
+      "<India>",
+      "<Kiel>",
+      "<University_of_Adelaide>"
+    ],
+    [
+      "<Clackamas_County,_Oregon>",
+      "<The_Samuel_Goldwyn_Company>",
+      "<Beasts_of_the_Southern_Wild>",
+      "<The_Bourne_Ultimatum_(film)>",
+      "<India>",
+      "<University_of_Idaho>",
+      "<Kiel>",
+      "<Oak_Park,_Illinois>",
+      "<University_of_Adelaide>",
+      "<Tbilisi>"
+    ],
+    [
+      "<Clackamas_County,_Oregon>",
+      "<The_Samuel_Goldwyn_Company>",
+      "<Beasts_of_the_Southern_Wild>",
+      "<The_Bourne_Ultimatum_(film)>",
+      "<India>",
+      "<University_of_Adelaide>",
+      "<Oak_Park,_Illinois>",
+      "<University_of_Idaho>",
+      "<Kiel>",
+      "<Ramones>"
+    ],
+    [
+      "<Clackamas_County,_Oregon>",
+      "<The_Samuel_Goldwyn_Company>",
+      "<Beasts_of_the_Southern_Wild>",
+      "<The_Bourne_Ultimatum_(film)>",
+      "<India>",
+      "<University_of_Idaho>",
+      "<University_of_Adelaide>",
+      "<Oak_Park,_Illinois>",
+      "<Palestinian_National_Authority>",
+      "<Kiel>"
+    ],
+    [
+      "<Clackamas_County,_Oregon>",
+      "<The_Samuel_Goldwyn_Company>",
+      "<Beasts_of_the_Southern_Wild>",
+      "<University_of_Adelaide>",
+      "<The_Bourne_Ultimatum_(film)>",
+      "<Tbilisi>",
+      "<India>",
+      "<University_of_Idaho>",
+      "<Oak_Park,_Illinois>",
+      "<Minnesota>"
+    ],
+    [
+      "<Clackamas_County,_Oregon>",
+      "<The_Samuel_Goldwyn_Company>",
+      "<Beasts_of_the_Southern_Wild>",
+      "<The_Bourne_Ultimatum_(film)>",
+      "<Oak_Park,_Illinois>",
+      "<University_of_Adelaide>",
+      "<University_of_Idaho>",
+      "<India>",
+      "<Kiel>",
+      "<Minnesota>"
+    ],
+    [
+      "<Clackamas_County,_Oregon>",
+      "<The_Samuel_Goldwyn_Company>",
+      "<Beasts_of_the_Southern_Wild>",
+      "<Tbilisi>",
+      "<Minnesota>",
+      "<The_Bourne_Ultimatum_(film)>",
+      "<Oak_Park,_Illinois>",
+      "<University_of_Adelaide>",
+      "<Kiel>",
+      "<University_of_Idaho>"
+    ],
+    [
+      "<Clackamas_County,_Oregon>",
+      "<The_Samuel_Goldwyn_Company>",
+      "<Beasts_of_the_Southern_Wild>",
+      "<The_Bourne_Ultimatum_(film)>",
+      "<India>",
+      "<University_of_Idaho>",
+      "<University_of_Adelaide>",
+      "<Oak_Park,_Illinois>",
+      "<Palestinian_National_Authority>",
+      "<Somalia>"
+    ]
+  ]
+}

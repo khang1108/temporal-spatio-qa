@@ -1,0 +1,163 @@
+{
+  "model": "STCQA",
+  "metrics": {
+    "Overall": {
+      "count": 10,
+      "Hits@1": 0.0,
+      "Hits@3": 0.0,
+      "Hits@10": 0.0
+    },
+    "DTC": {
+      "count": 0,
+      "Hits@1": 0.0,
+      "Hits@3": 0.0,
+      "Hits@10": 0.0
+    },
+    "STC": {
+      "count": 10,
+      "Hits@1": 0.0,
+      "Hits@3": 0.0,
+      "Hits@10": 0.0
+    },
+    "DDC": {
+      "count": 3,
+      "Hits@1": 0.0,
+      "Hits@3": 0.0,
+      "Hits@10": 0.0
+    },
+    "SDC": {
+      "count": 3,
+      "Hits@1": 0.0,
+      "Hits@3": 0.0,
+      "Hits@10": 0.0
+    },
+    "DC": {
+      "count": 4,
+      "Hits@1": 0.0,
+      "Hits@3": 0.0,
+      "Hits@10": 0.0
+    }
+  },
+  "predictions": [
+    [
+      "<John_Kerry>",
+      "<Associated_Press>",
+      "<Melbourne>",
+      "<University_of_Karachi>",
+      "<William_S._Burroughs>",
+      "<Zagreb>",
+      "<Dashiell_Hammett>",
+      "<Eastern_Illinois_University>",
+      "<Muskogee,_Oklahoma>",
+      "<Taiwo_Atieno>"
+    ],
+    [
+      "<William_Kiernan>",
+      "<John_McClelland_(footballer,_born_1955)>",
+      "<The_Song_of_Bernadette_(film)>",
+      "<York_County,_Maine>",
+      "<University_of_Western_Australia>",
+      "<Amritsar>",
+      "<PSV_Eindhoven>",
+      "<Arkansas>",
+      "<Ian_Hendon>",
+      "<Haverford_College>"
+    ],
+    [
+      "<Phillips_Exeter_Academy>",
+      "<Craig_Reid_(footballer,_born_1985)>",
+      "<Carroll_County,_New_Hampshire>",
+      "<Espoo>",
+      "<Charlotte,_North_Carolina>",
+      "<Shandong_Luneng_Taishan_F.C.>",
+      "<Hot_Fuzz>",
+      "<Denver>",
+      "<Ronny_Rosenthal>",
+      "<Royal_College_of_Art>"
+    ],
+    [
+      "<Ohio_State_Buckeyes_football>",
+      "<Mark_Atkins_(footballer)>",
+      "<Aldershot>",
+      "<Trinity_College,_Dublin>",
+      "<Lance_Key>",
+      "<West_Virginia_University>",
+      "<Hereafter_(film)>",
+      "<Crawley>",
+      "<Dark_Horse_Comics>",
+      "<USA_Network>"
+    ],
+    [
+      "<Nora_Ephron>",
+      "<Marley_(film)>",
+      "<E._W._Scripps_Company>",
+      "<Florence,_South_Carolina>",
+      "<The_Walt_Disney_Company>",
+      "<Ocala,_Florida>",
+      "<Raymond_Chandler>",
+      "<Ali_(film)>",
+      "<Pan_American_World_Airways>",
+      "<Trieste>"
+    ],
+    [
+      "<Denzel_Washington>",
+      "<First_Crusade>",
+      "<James_Chester>",
+      "<The_Penguins_of_Madagascar>",
+      "<Ram_Gopal_Varma>",
+      "<Ukraine>",
+      "<Phil_Gilchrist>",
+      "<Tom_Berenger>",
+      "<Alain_Delon>",
+      "<Alexandria>"
+    ],
+    [
+      "<Coventry_City_F.C.>",
+      "<University_of_California,_Santa_Barbara>",
+      "<Park_County,_Wyoming>",
+      "<Holby_City>",
+      "<FC_Torpedo_Moscow>",
+      "<Claude_Davis>",
+      "<Suffolk_University_Law_School>",
+      "<MIT_Sloan_School_of_Management>",
+      "<Trenton,_New_Jersey>",
+      "<Youngstown,_Ohio>"
+    ],
+    [
+      "<Margaret_Thatcher>",
+      "<Morocco>",
+      "<Downey,_California>",
+      "<Columbia_Business_School>",
+      "<Damian_Marley>",
+      "<Vicenza_Calcio>",
+      "<Huddersfield>",
+      "<Richard_Johnson_(footballer)>",
+      "<ER_(TV_series)>",
+      "<Verizon_Communications>"
+    ],
+    [
+      "<Jeff_Kenna>",
+      "<Geena_Davis>",
+      "<Tillamook_County,_Oregon>",
+      "<Switzerland>",
+      "<Bhutan>",
+      "<Richard_Attenborough>",
+      "<Adolf_Hitler>",
+      "<Nevada>",
+      "<Catch_Me_If_You_Can>",
+      "<University_of_Wyoming>"
+    ],
+    [
+      "<Saint_Petersburg_Conservatory>",
+      "<India>",
+      "<Green_Bay,_Wisconsin>",
+      "<Danubio_F.C.>",
+      "<Rhys_Taylor>",
+      "<Victory_Records>",
+      "<Bakersfield,_California>",
+      "<Taylor_Lautner>",
+      "<Jay_O'Shea>",
+      "<Frederick,_Maryland>"
+    ]
+  ]
+}

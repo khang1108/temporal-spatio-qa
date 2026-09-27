@@ -1,0 +1,163 @@
+{
+  "model": "MultiQA",
+  "metrics": {
+    "Overall": {
+      "count": 10,
+      "Hits@1": 0.0,
+      "Hits@3": 0.0,
+      "Hits@10": 0.0
+    },
+    "DTC": {
+      "count": 0,
+      "Hits@1": 0.0,
+      "Hits@3": 0.0,
+      "Hits@10": 0.0
+    },
+    "STC": {
+      "count": 10,
+      "Hits@1": 0.0,
+      "Hits@3": 0.0,
+      "Hits@10": 0.0
+    },
+    "DDC": {
+      "count": 3,
+      "Hits@1": 0.0,
+      "Hits@3": 0.0,
+      "Hits@10": 0.0
+    },
+    "SDC": {
+      "count": 3,
+      "Hits@1": 0.0,
+      "Hits@3": 0.0,
+      "Hits@10": 0.0
+    },
+    "DC": {
+      "count": 4,
+      "Hits@1": 0.0,
+      "Hits@3": 0.0,
+      "Hits@10": 0.0
+    }
+  },
+  "predictions": [
+    [
+      "<De-Lovely>",
+      "<Sigmund_Freud>",
+      "<Java_(programming_language)>",
+      "<Dean_Crowe>",
+      "<Czechoslovakia>",
+      "<Jeff_Kenna>",
+      "<Stan_Davies>",
+      "<Vallejo,_California>",
+      "<Ralph_Vaughan_Williams>",
+      "<Happy_Feet>"
+    ],
+    [
+      "<Enid,_Oklahoma>",
+      "<Second_Sino-Japanese_War>",
+      "<The_Samuel_Goldwyn_Company>",
+      "<Leipzig>",
+      "<Warren_Zevon>",
+      "<S\u00e9bastien_Carole>",
+      "<Robin_Hulbert>",
+      "<Yul_Brynner>",
+      "<United_Airlines>",
+      "<Reuben_Agboola>"
+    ],
+    [
+      "<David_McDonald_(footballer)>",
+      "<Cambridge,_Massachusetts>",
+      "<El_Paso_County,_Colorado>",
+      "<Asylum_Records>",
+      "<Taiwo_Atieno>",
+      "<Glendale,_California>",
+      "<I_Am_Legend_(film)>",
+      "<Missoula,_Montana>",
+      "<Ipswich,_Queensland>",
+      "<Gary_Charles>"
+    ],
+    [
+      "<TVT_Records>",
+      "<Michael_Caine>",
+      "<The_Last_Picture_Show>",
+      "<Royal_College_of_Music>",
+      "<Eagle_County,_Colorado>",
+      "<Maceo_Rigters>",
+      "<Nebraska_Cornhuskers_football>",
+      "<Kathmandu>",
+      "<University_of_Washington>",
+      "<Popeye_(film)>"
+    ],
+    [
+      "<Providence_College>",
+      "<Dogville>",
+      "<Fraser_Forster>",
+      "<Harris_County,_Texas>",
+      "<Wellington_College,_Berkshire>",
+      "<Don_Revie>",
+      "<Cass_County,_North_Dakota>",
+      "<West_Bromwich>",
+      "<Oxford_County,_Maine>",
+      "<Babe_(film)>"
+    ],
+    [
+      "<Vietnam>",
+      "<Regis_Philbin>",
+      "<Bradenton,_Florida>",
+      "<Accra>",
+      "<Luiz_Bombonato_Goulart>",
+      "<La_Dolce_Vita>",
+      "<Richard_Johnson_(footballer)>",
+      "<Finland>",
+      "<Lake_Charles,_Louisiana>",
+      "<James_A._Garfield>"
+    ],
+    [
+      "<Mikkel_Andersen>",
+      "<I_Love_You,_Man>",
+      "<Rounder_Records>",
+      "<Leamington_Spa>",
+      "<Jodhaa_Akbar>",
+      "<Jeff_Gordon>",
+      "<Minnesota_Vikings>",
+      "<San_Diego>",
+      "<Bailiwick_of_Guernsey>",
+      "<Wesley_Clark>"
+    ],
+    [
+      "<Shrine_Auditorium>",
+      "<Axl_Rose>",
+      "<Russell_Metty>",
+      "<Alice_(TV_series)>",
+      "<Carl_Fletcher_(Welsh_footballer)>",
+      "<Penzance>",
+      "<Radio_Days>",
+      "<Dallas_Cowboys>",
+      "<Iraq>",
+      "<Mohamed_Sissoko>"
+    ],
+    [
+      "<Washtenaw_County,_Michigan>",
+      "<Onandi_Lowe>",
+      "<Goldsmiths,_University_of_London>",
+      "<Cliffhanger_(film)>",
+      "<Nelson,_New_Zealand>",
+      "<Caldecott_Medal>",
+      "<Durham,_England>",
+      "<Monster_House_(film)>",
+      "<Colombo>",
+      "<Green_Bay,_Wisconsin>"
+    ],
+    [
+      "<Battlefield_Earth_(film)>",
+      "<Miguel_de_Souza>",
+      "<Blade_II>",
+      "<Molde_FK>",
+      "<EBay>",
+      "<Gone_Baby_Gone>",
+      "<Fulton_County,_Georgia>",
+      "<Craig_Fagan>",
+      "<Groton_School>",
+      "<Tour_de_France>"
+    ]
+  ]
+}
