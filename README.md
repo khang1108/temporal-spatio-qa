@@ -112,17 +112,18 @@ python baselines/stcqa/run.py --eval_only
 
 ### 3. Training from Scratch
 
-To train any model from scratch on CPU (using precomputed RoBERTa embeddings):
+To train any model from scratch (exact paper configuration: 60 epochs, batch size 150, lr 2e-5):
 ```bash
 # RoBERTa-base
-python baselines/roberta/run.py --epochs 10 --batch_size 32 --lr 2e-5
+python baselines/roberta/run.py
 
 # MultiQA
-python baselines/multiqa/run.py --epochs 10 --batch_size 32 --lr 2e-5
+python baselines/multiqa/run.py
 
 # STCQA
-python baselines/stcqa/run.py --epochs 10 --batch_size 32 --lr 2e-5
+python baselines/stcqa/run.py
 ```
+*(All hyperparameter defaults now match Appendix B of the paper: `--epochs 60 --batch_size 150 --lr 2e-5`)*.
 
 Tip for quick debugging: Add `--max_samples 50 --epochs 1` to test the pipeline in seconds.
 
