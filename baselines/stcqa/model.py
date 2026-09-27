@@ -73,16 +73,19 @@ class STCQAModel(nn.Module):
         self.default_l_im = nn.Parameter(torch.zeros(1, embedding_dim))
 
     def encode_and_fuse(self,
-                        input_ids: torch.Tensor,
-                        attention_mask: torch.Tensor,
+                        input_ids: Optional[torch.Tensor],
+                        attention_mask: Optional[torch.Tensor],
                         c_re: torch.Tensor,
                         t_re: torch.Tensor,
-                        l_re: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+                        l_re: torch.Tensor,
+                        cls_rep: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Fuses question text encoding with clue embeddings via 2-layer Transformer.
         """
-        outputs = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
-        cls_rep = outputs.last_hidden_state[:, 0, :]
+        if cls_rep is None:
+            assert input_ids is not None and attention_mask is not None
+            outputs = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
+            cls_rep = outputs.last_hidden_state[:, 0, :]
 
         raw_q_re = self.proj_q_re(cls_rep)
         raw_q_im = self.proj_q_im(cls_rep)
@@ -99,16 +102,17 @@ class STCQAModel(nn.Module):
         return rel_re, rel_im
 
     def forward(self,
-                input_ids: torch.Tensor,
-                attention_mask: torch.Tensor,
-                central_ids: torch.Tensor = None,
-                time_ids: torch.Tensor = None,
-                loc_ids: torch.Tensor = None) -> torch.Tensor:
+                input_ids: Optional[torch.Tensor] = None,
+                attention_mask: Optional[torch.Tensor] = None,
+                central_ids: Optional[torch.Tensor] = None,
+                time_ids: Optional[torch.Tensor] = None,
+                loc_ids: Optional[torch.Tensor] = None,
+                cls_rep: Optional[torch.Tensor] = None) -> torch.Tensor:
         """
         Bidirectional scoring per Equation (4) in paper:
         max(phi_ST(e_c, W_E q, e, v_t, v_l), phi_ST(e, W_E q, e_c, v_t, v_l))
         """
-        batch_size = input_ids.size(0)
+        batch_size = cls_rep.size(0) if cls_rep is not None else input_ids.size(0)
 
         # Retrieve central entity embedding
         if central_ids is not None and (central_ids >= 0).any():
@@ -141,7 +145,7 @@ class STCQAModel(nn.Module):
             l_im = self.default_l_im.expand(batch_size, -1)
 
         # Fuse question representation
-        r_re, r_im = self.encode_and_fuse(input_ids, attention_mask, c_re, t_re, l_re)
+        r_re, r_im = self.encode_and_fuse(input_ids, attention_mask, c_re, t_re, l_re, cls_rep=cls_rep)
 
         # Forward score: phi_ST(e_c, W_E q, e, v_t, v_l)
         forward_scores = self.st_embeddings.score_fact(c_re, c_im, r_re, r_im, t_re, t_im, l_re, l_im)
@@ -167,12 +171,32 @@ class STCQAModel(nn.Module):
         return loss
 
     def predict_topk(self,
-                     input_ids: torch.Tensor,
-                     attention_mask: torch.Tensor,
-                     central_ids: torch.Tensor = None,
-                     time_ids: torch.Tensor = None,
-                     loc_ids: torch.Tensor = None,
+                     input_ids: Optional[torch.Tensor] = None,
+                     attention_mask: Optional[torch.Tensor] = None,
+                     central_ids: Optional[torch.Tensor] = None,
+                     time_ids: Optional[torch.Tensor] = None,
+                     loc_ids: Optional[torch.Tensor] = None,
+                     cls_rep: Optional[torch.Tensor] = None,
                      k: int = 20) -> Tuple[torch.Tensor, torch.Tensor]:
-        logits = self.forward(input_ids, attention_mask, central_ids, time_ids, loc_ids)
+        logits = self.forward(input_ids, attention_mask, central_ids, time_ids, loc_ids, cls_rep=cls_rep)
         topk_scores, topk_indices = torch.topk(logits, k=k, dim=-1)
         return topk_indices, topk_scores
+
+    def load_checkpoint(self,
+                        checkpoint_path: Optional[str] = None,
+                        url: Optional[str] = None,
+                        device: Optional[torch.device] = None,
+                        force_download: bool = False):
+        """
+        Checks whether .pt file exists; if not, downloads it, then loads weights into model.
+        """
+        from src.checkpoint_utils import load_model_checkpoint
+        return load_model_checkpoint(
+            self,
+            model_name="stcqa",
+            checkpoint_path=checkpoint_path,
+            url=url,
+            device=device,
+            force_download=force_download
+        )
+

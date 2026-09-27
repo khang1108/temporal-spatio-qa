@@ -21,15 +21,18 @@ This repository implements the 3 primary models from the paper:
 ```
 Spatial-Temporal-KG/
 ├── data/
-│   └── stqad/
-│       ├── train_datas.json          # 8,505 training questions
-│       ├── val_datas.json            # 1,063 validation questions
-│       ├── test_datas.json           # 1,063 test questions
-│       ├── entity2id.json            # 5,897 unique entities
-│       └── relation2id.json          # 11 relation types
+│   ├── stqad/
+│   │   ├── train_datas.json          # 8,505 training questions
+│   │   ├── val_datas.json            # 1,063 validation questions
+│   │   ├── test_datas.json           # 1,063 test questions
+│   │   ├── entity2id.json            # 5,897 unique entities
+│   │   └── relation2id.json          # 11 relation types
+│   └── cached_embeddings/            # Precomputed RoBERTa [CLS] vectors for CPU acceleration
 ├── src/
+│   ├── checkpoint_utils.py          # Auto-download and verification for .pt weights
 │   ├── dataset.py                   # PyTorch Dataset & DataLoader
 │   ├── evaluation.py                # Hits@1, Hits@3, Hits@10 with constraint breakdown
+│   ├── precompute_embeddings.py     # Offline LM embedding cache script
 │   ├── utils_geo.py                 # Haversine distance and direction checking
 │   └── utils_time.py                # Interval and timestamp comparison logic
 ├── baselines/
@@ -40,17 +43,43 @@ Spatial-Temporal-KG/
 │   │   ├── model.py
 │   │   └── run.py
 │   └── stcqa/                       # STCQA Proposed Method
-│       ├── st_embedding.py          # ST-TComplEx formulation
-│       ├── model.py                 # Transformer Fusion & Bidirectional Scoring
-│       ├── constraint_filter.py     # Deterministic Answer Filtering
-│       └── run.py
+│   │   ├── st_embedding.py          # ST-TComplEx formulation
+│   │   ├── model.py                 # Transformer Fusion & Bidirectional Scoring
+│   │   ├── constraint_filter.py     # Deterministic Answer Filtering
+│   │   └── run.py
 ├── experiments/
-│   ├── checkpoints/                 # Saved best model checkpoints
+│   ├── checkpoints/                 # Model checkpoint weights (.pt files)
 │   ├── predictions/                 # Output prediction JSON files
 │   └── benchmark_report.md          # Generated Table 5 comparative report
-├── benchmark.py                     # Aggregates and formats comparative benchmark
+├── scripts/
+│   ├── benchmark.py                 # Aggregates and formats comparative benchmark
+│   └── download_checkpoints.py      # Standalone CLI tool to download .pt checkpoints
 ├── requirements.txt
 └── README.md
+```
+
+---
+
+## Model Checkpoint Auto-Download Logic
+
+When evaluating models or calling `load_model()` / `model.load_checkpoint()`:
+- The loader first checks whether the `.pt` checkpoint file exists locally.
+- If the `.pt` file is missing, it automatically downloads the pre-trained weights from the remote repository / URL with a progress bar.
+- Custom download URLs can be provided via the `--checkpoint_url` CLI flag or environment variables:
+  - `ROBERTA_CHECKPOINT_URL`
+  - `MULTIQA_CHECKPOINT_URL`
+  - `STCQA_CHECKPOINT_URL`
+
+You can also pre-download all weights in batch using the standalone CLI script:
+```bash
+# Download all model weights
+python scripts/download_checkpoints.py --model all
+
+# Download a specific model weight
+python scripts/download_checkpoints.py --model stcqa
+
+# Download with a custom URL
+python scripts/download_checkpoints.py --model stcqa --url <CUSTOM_URL>
 ```
 
 ---
@@ -59,34 +88,47 @@ Spatial-Temporal-KG/
 
 ### 1. Environment Setup
 ```bash
-# Using uv (recommended)
 uv venv .venv --python 3.12
 source .venv/bin/activate
 uv pip install -r requirements.txt
 ```
 
-### 2. Running Individual Baselines
+### 2. Running Evaluation (Auto-downloads .pt if missing)
 
-#### Run RoBERTa-base:
+#### Evaluate RoBERTa-base:
 ```bash
+python baselines/roberta/run.py --eval_only
+```
+
+#### Evaluate MultiQA:
+```bash
+python baselines/multiqa/run.py --eval_only
+```
+
+#### Evaluate Proposed STCQA:
+```bash
+python baselines/stcqa/run.py --eval_only
+```
+
+### 3. Training from Scratch
+
+To train any model from scratch on CPU (using precomputed RoBERTa embeddings):
+```bash
+# RoBERTa-base
 python baselines/roberta/run.py --epochs 10 --batch_size 32 --lr 2e-5
-```
 
-#### Run MultiQA:
-```bash
+# MultiQA
 python baselines/multiqa/run.py --epochs 10 --batch_size 32 --lr 2e-5
-```
 
-#### Run Proposed STCQA:
-```bash
+# STCQA
 python baselines/stcqa/run.py --epochs 10 --batch_size 32 --lr 2e-5
 ```
 
-*Tip for quick debugging on CPU:* Add `--max_samples 50 --epochs 1` to test the pipeline in seconds.
+Tip for quick debugging: Add `--max_samples 50 --epochs 1` to test the pipeline in seconds.
 
-### 3. Generate Comparative Benchmark Table (Table 5)
+### 4. Generate Comparative Benchmark Table (Table 5)
 ```bash
-python benchmark.py
+python scripts/benchmark.py
 ```
 Outputs the markdown report comparing all reproduced models against paper reference scores across:
 - **DTC:** Double Timestamp Constraints (`during`, `while`)
@@ -104,4 +146,4 @@ To test a new architecture or variation (e.g. rotary embeddings, LLM verifier):
 2. Reuse `src.dataset.STQADataset` and `src.dataset.get_vocabularies` for data loading.
 3. Call `src.evaluation.evaluate_benchmark(predictions, dataset_items)` to compute metrics.
 4. Save your predictions to `experiments/predictions/my_mutation_test_preds.json`.
-5. Run `python benchmark.py` to see your new method added to the leaderboard!
+5. Run `python scripts/benchmark.py` to see your new method added to the leaderboard.

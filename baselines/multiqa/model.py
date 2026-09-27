@@ -4,6 +4,7 @@ Implements TComplEx-based temporal scoring with multi-granularity (Year) tempora
 Reference: Chen et al. (ACL 2023) / Dai et al. (KBS 2025) Section 6.1.1.
 """
 
+from typing import Optional
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -59,24 +60,30 @@ class MultiQABaseline(nn.Module):
         self.default_time_re = nn.Parameter(torch.ones(1, embedding_dim))
         self.default_time_im = nn.Parameter(torch.zeros(1, embedding_dim))
 
-    def get_complex_question(self, input_ids: torch.Tensor, attention_mask: torch.Tensor):
-        outputs = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
-        cls_rep = outputs.last_hidden_state[:, 0, :]
+    def get_complex_question(self,
+                             input_ids: Optional[torch.Tensor] = None,
+                             attention_mask: Optional[torch.Tensor] = None,
+                             cls_rep: Optional[torch.Tensor] = None):
+        if cls_rep is None:
+            assert input_ids is not None and attention_mask is not None
+            outputs = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
+            cls_rep = outputs.last_hidden_state[:, 0, :]
         q_re = self.dropout(self.proj_re(cls_rep))
         q_im = self.dropout(self.proj_im(cls_rep))
         return q_re, q_im
 
     def forward(self,
-                input_ids: torch.Tensor,
-                attention_mask: torch.Tensor,
-                subj_ids: torch.Tensor = None,
-                time_ids: torch.Tensor = None) -> torch.Tensor:
+                input_ids: Optional[torch.Tensor] = None,
+                attention_mask: Optional[torch.Tensor] = None,
+                subj_ids: Optional[torch.Tensor] = None,
+                time_ids: Optional[torch.Tensor] = None,
+                cls_rep: Optional[torch.Tensor] = None) -> torch.Tensor:
         """
         Computes TComplEx logits over all candidate entities.
         Returns: (batch_size, num_entities)
         """
-        batch_size = input_ids.size(0)
-        q_re, q_im = self.get_complex_question(input_ids, attention_mask)
+        batch_size = cls_rep.size(0) if cls_rep is not None else input_ids.size(0)
+        q_re, q_im = self.get_complex_question(input_ids, attention_mask, cls_rep=cls_rep)
 
         # Subject complex embedding
         if subj_ids is not None and (subj_ids >= 0).any():
@@ -120,11 +127,31 @@ class MultiQABaseline(nn.Module):
         return loss
 
     def predict_topk(self,
-                     input_ids: torch.Tensor,
-                     attention_mask: torch.Tensor,
-                     subj_ids: torch.Tensor = None,
-                     time_ids: torch.Tensor = None,
+                     input_ids: Optional[torch.Tensor] = None,
+                     attention_mask: Optional[torch.Tensor] = None,
+                     subj_ids: Optional[torch.Tensor] = None,
+                     time_ids: Optional[torch.Tensor] = None,
+                     cls_rep: Optional[torch.Tensor] = None,
                      k: int = 10) -> torch.Tensor:
-        logits = self.forward(input_ids, attention_mask, subj_ids, time_ids)
+        logits = self.forward(input_ids, attention_mask, subj_ids, time_ids, cls_rep=cls_rep)
         _, topk_indices = torch.topk(logits, k=k, dim=-1)
         return topk_indices
+
+    def load_checkpoint(self,
+                        checkpoint_path: Optional[str] = None,
+                        url: Optional[str] = None,
+                        device: Optional[torch.device] = None,
+                        force_download: bool = False):
+        """
+        Checks whether .pt file exists; if not, downloads it, then loads weights into model.
+        """
+        from src.checkpoint_utils import load_model_checkpoint
+        return load_model_checkpoint(
+            self,
+            model_name="multiqa",
+            checkpoint_path=checkpoint_path,
+            url=url,
+            device=device,
+            force_download=force_download
+        )
+

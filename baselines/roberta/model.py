@@ -8,6 +8,7 @@ Following Dai et al. (KBS 2025) Section 6.1.1:
 - Loss: Cross-entropy over target answers
 """
 
+from typing import Optional
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -43,14 +44,18 @@ class RoBERTaBaseline(nn.Module):
         self.entity_embeddings = nn.Embedding(num_entities, embedding_dim)
         nn.init.xavier_uniform_(self.entity_embeddings.weight)
 
-    def forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor) -> torch.Tensor:
+    def forward(self,
+                input_ids: Optional[torch.Tensor] = None,
+                attention_mask: Optional[torch.Tensor] = None,
+                cls_rep: Optional[torch.Tensor] = None) -> torch.Tensor:
         """
         Computes logits over all candidate entities.
         Returns tensor of shape (batch_size, num_entities).
         """
-        outputs = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
-        # Use [CLS] representation (pooled or first token)
-        cls_rep = outputs.last_hidden_state[:, 0, :]  # (batch_size, 768)
+        if cls_rep is None:
+            assert input_ids is not None and attention_mask is not None, "Provide input_ids/attention_mask or cls_rep"
+            outputs = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
+            cls_rep = outputs.last_hidden_state[:, 0, :]  # (batch_size, 768)
 
         # Project to 512 dimensions
         q_proj = self.projection(cls_rep)  # (batch_size, 512)
@@ -70,10 +75,33 @@ class RoBERTaBaseline(nn.Module):
         loss = -torch.sum(target_dist * log_probs, dim=-1).mean()
         return loss
 
-    def predict_topk(self, input_ids: torch.Tensor, attention_mask: torch.Tensor, k: int = 10) -> torch.Tensor:
+    def predict_topk(self,
+                     input_ids: Optional[torch.Tensor] = None,
+                     attention_mask: Optional[torch.Tensor] = None,
+                     cls_rep: Optional[torch.Tensor] = None,
+                     k: int = 10) -> torch.Tensor:
         """
         Returns top-k entity IDs for each sample in the batch.
         """
-        logits = self.forward(input_ids, attention_mask)
+        logits = self.forward(input_ids, attention_mask, cls_rep=cls_rep)
         _, topk_indices = torch.topk(logits, k=k, dim=-1)
         return topk_indices
+
+    def load_checkpoint(self,
+                        checkpoint_path: Optional[str] = None,
+                        url: Optional[str] = None,
+                        device: Optional[torch.device] = None,
+                        force_download: bool = False):
+        """
+        Checks whether .pt file exists; if not, downloads it, then loads weights into model.
+        """
+        from src.checkpoint_utils import load_model_checkpoint
+        return load_model_checkpoint(
+            self,
+            model_name="roberta",
+            checkpoint_path=checkpoint_path,
+            url=url,
+            device=device,
+            force_download=force_download
+        )
+

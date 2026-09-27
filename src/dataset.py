@@ -57,34 +57,21 @@ class STQADataset(Dataset):
                  tokenizer,
                  entity2id: Dict[str, int],
                  max_length: int = 128,
-                 use_paraphrased: bool = True):
+                 use_paraphrased: bool = True,
+                 cached_cls: Optional[torch.Tensor] = None):
         self.data = data
         self.tokenizer = tokenizer
         self.entity2id = entity2id
         self.num_entities = len(entity2id)
         self.max_length = max_length
         self.use_paraphrased = use_paraphrased
+        self.cached_cls = cached_cls
 
     def __len__(self) -> int:
         return len(self.data)
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         item = self.data[idx]
-        q_text = item.get("paraphrased_question", "") if self.use_paraphrased else item.get("question", "")
-        if not q_text:
-            q_text = item.get("question", "")
-
-        # Tokenize question
-        encoded = self.tokenizer(
-            q_text,
-            max_length=self.max_length,
-            padding="max_length",
-            truncation=True,
-            return_tensors="pt"
-        )
-
-        input_ids = encoded["input_ids"].squeeze(0)
-        attention_mask = encoded["attention_mask"].squeeze(0)
 
         # Multi-target answer vector
         target_vec = torch.zeros(self.num_entities, dtype=torch.float32)
@@ -100,20 +87,16 @@ class STQADataset(Dataset):
                 target_vec[eid] = 1.0
                 target_ids.append(eid)
 
-        # Normalize target_vec for cross-entropy with soft probabilities if needed
         num_targets = len(target_ids)
         target_dist = target_vec / max(1, num_targets)
 
-        # Extract entity IDs mentioned in question
         question_entity_ids = []
         for e in item.get("entities", []):
             cleaned = clean_entity(e)
             if cleaned in self.entity2id:
                 question_entity_ids.append(self.entity2id[cleaned])
 
-        return {
-            "input_ids": input_ids,
-            "attention_mask": attention_mask,
+        result = {
             "target_vec": target_vec,
             "target_dist": target_dist,
             "target_ids": target_ids,
@@ -121,21 +104,50 @@ class STQADataset(Dataset):
             "raw_item": item
         }
 
+        # If cached embeddings are available, avoid re-tokenizing on the fly
+        if self.cached_cls is not None:
+            result["cls_rep"] = self.cached_cls[idx]
+            result["input_ids"] = torch.zeros(1, dtype=torch.long)
+            result["attention_mask"] = torch.zeros(1, dtype=torch.long)
+        else:
+            q_text = item.get("paraphrased_question", "") if self.use_paraphrased else item.get("question", "")
+            if not q_text:
+                q_text = item.get("question", "")
+
+            encoded = self.tokenizer(
+                q_text,
+                max_length=self.max_length,
+                padding="max_length",
+                truncation=True,
+                return_tensors="pt"
+            )
+            result["input_ids"] = encoded["input_ids"].squeeze(0)
+            result["attention_mask"] = encoded["attention_mask"].squeeze(0)
+
+        return result
+
 
 def collate_stqad_fn(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Custom collate function for DataLoader."""
-    input_ids = torch.stack([b["input_ids"] for b in batch])
-    attention_mask = torch.stack([b["attention_mask"] for b in batch])
     target_vec = torch.stack([b["target_vec"] for b in batch])
     target_dist = torch.stack([b["target_dist"] for b in batch])
     raw_items = [b["raw_item"] for b in batch]
     question_entity_ids = [b["question_entity_ids"] for b in batch]
 
-    return {
-        "input_ids": input_ids,
-        "attention_mask": attention_mask,
+    out = {
         "target_vec": target_vec,
         "target_dist": target_dist,
         "question_entity_ids": question_entity_ids,
         "raw_items": raw_items
     }
+
+    if "cls_rep" in batch[0]:
+        out["cls_rep"] = torch.stack([b["cls_rep"] for b in batch])
+        out["input_ids"] = None
+        out["attention_mask"] = None
+    else:
+        out["input_ids"] = torch.stack([b["input_ids"] for b in batch])
+        out["attention_mask"] = torch.stack([b["attention_mask"] for b in batch])
+        out["cls_rep"] = None
+
+    return out

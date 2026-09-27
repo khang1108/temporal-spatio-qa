@@ -16,6 +16,7 @@ from tqdm import tqdm
 
 from src.dataset import load_stqad, get_vocabularies, STQADataset, collate_stqad_fn, clean_entity
 from src.evaluation import evaluate_benchmark, format_table5_markdown
+from src.checkpoint_utils import ensure_checkpoint, load_model_checkpoint
 from baselines.multiqa.model import MultiQABaseline
 
 
@@ -33,6 +34,7 @@ def parse_args():
     parser.add_argument("--max_samples", type=int, default=None)
     parser.add_argument("--freeze_encoder", action="store_true")
     parser.add_argument("--eval_only", action="store_true")
+    parser.add_argument("--checkpoint_url", type=str, default=None, help="Download URL if checkpoint is not found locally")
     return parser.parse_args()
 
 
@@ -70,11 +72,12 @@ def evaluate(model, dataloader, id2entity, entity2id, dataset_items, device, k=1
 
     with torch.no_grad():
         for batch in tqdm(dataloader, desc="Evaluating MultiQA", leave=False):
-            input_ids = batch["input_ids"].to(device)
-            attention_mask = batch["attention_mask"].to(device)
+            cls_rep = batch["cls_rep"].to(device) if batch.get("cls_rep") is not None else None
+            input_ids = batch["input_ids"].to(device) if batch.get("input_ids") is not None else None
+            attention_mask = batch["attention_mask"].to(device) if batch.get("attention_mask") is not None else None
             subj_ids, time_ids = extract_batch_entities(batch["raw_items"], entity2id, device)
 
-            topk_indices = model.predict_topk(input_ids, attention_mask, subj_ids, time_ids, k=k)
+            topk_indices = model.predict_topk(input_ids, attention_mask, subj_ids, time_ids, cls_rep=cls_rep, k=k)
             topk_indices = topk_indices.cpu().tolist()
 
             for indices in topk_indices:
@@ -102,6 +105,14 @@ def main():
     val_data = load_stqad("val", args.data_dir)
     test_data = load_stqad("test", args.data_dir)
 
+    cached_dir = "data/cached_embeddings"
+    train_cached, val_cached, test_cached = None, None, None
+    if not args.max_samples and os.path.exists(os.path.join(cached_dir, "train_roberta_cls.pt")):
+        print("Found cached RoBERTa embeddings in data/cached_embeddings/! Fast CPU training enabled.")
+        train_cached = torch.load(os.path.join(cached_dir, "train_roberta_cls.pt"), map_location="cpu")
+        val_cached = torch.load(os.path.join(cached_dir, "val_roberta_cls.pt"), map_location="cpu")
+        test_cached = torch.load(os.path.join(cached_dir, "test_roberta_cls.pt"), map_location="cpu")
+
     if args.max_samples:
         train_data = train_data[:args.max_samples]
         val_data = val_data[:min(len(val_data), args.max_samples)]
@@ -109,9 +120,9 @@ def main():
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
 
-    train_dataset = STQADataset(train_data, tokenizer, entity2id, max_length=args.max_length)
-    val_dataset = STQADataset(val_data, tokenizer, entity2id, max_length=args.max_length)
-    test_dataset = STQADataset(test_data, tokenizer, entity2id, max_length=args.max_length)
+    train_dataset = STQADataset(train_data, tokenizer, entity2id, max_length=args.max_length, cached_cls=train_cached)
+    val_dataset = STQADataset(val_data, tokenizer, entity2id, max_length=args.max_length, cached_cls=val_cached)
+    test_dataset = STQADataset(test_data, tokenizer, entity2id, max_length=args.max_length, cached_cls=test_cached)
 
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, collate_fn=collate_stqad_fn)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, collate_fn=collate_stqad_fn)
@@ -136,13 +147,14 @@ def main():
             total_loss = 0.0
 
             for batch in tqdm(train_loader, desc=f"MultiQA Epoch {epoch}/{args.epochs}"):
-                input_ids = batch["input_ids"].to(device)
-                attention_mask = batch["attention_mask"].to(device)
+                cls_rep = batch["cls_rep"].to(device) if batch.get("cls_rep") is not None else None
+                input_ids = batch["input_ids"].to(device) if batch.get("input_ids") is not None else None
+                attention_mask = batch["attention_mask"].to(device) if batch.get("attention_mask") is not None else None
                 target_dist = batch["target_dist"].to(device)
                 subj_ids, time_ids = extract_batch_entities(batch["raw_items"], entity2id, device)
 
                 optimizer.zero_grad()
-                logits = model(input_ids, attention_mask, subj_ids, time_ids)
+                logits = model(input_ids, attention_mask, subj_ids, time_ids, cls_rep=cls_rep)
                 loss = model.compute_loss(logits, target_dist)
                 loss.backward()
                 optimizer.step()
@@ -160,11 +172,11 @@ def main():
             if val_hits1 > best_val_hits1:
                 best_val_hits1 = val_hits1
                 torch.save(model.state_dict(), best_checkpoint)
-                print(f"  -> Saved new best MultiQA checkpoint to {best_checkpoint}")
-
-    if os.path.exists(best_checkpoint):
-        print(f"Loading best checkpoint from {best_checkpoint}...")
-        model.load_state_dict(torch.load(best_checkpoint, map_location=device))
+    # Test Evaluation / Checkpoint Loading: checks whether have .pt files, if not downloads .pt files
+    if args.eval_only:
+        load_model_checkpoint(model, "multiqa", checkpoint_path=best_checkpoint, url=args.checkpoint_url, device=device)
+    elif os.path.exists(best_checkpoint):
+        load_model_checkpoint(model, "multiqa", checkpoint_path=best_checkpoint, url=args.checkpoint_url, device=device)
 
     test_results, test_preds = evaluate(model, test_loader, id2entity, entity2id, test_data, device)
 

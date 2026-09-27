@@ -1,0 +1,13 @@
+{
+  "<created>": 0,
+  "<dealsWith>": 1,
+  "<graduatedFrom>": 2,
+  "<hasNeighbor>": 3,
+  "<isCitizenOf>": 4,
+  "<isLeaderOf>": 5,
+  "<isLocatedIn>": 6,
+  "<isPoliticianOf>": 7,
+  "<livesIn>": 8,
+  "<playsFor>": 9,
+  "<worksAt>": 10
+}

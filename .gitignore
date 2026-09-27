@@ -1,2 +1,11 @@
-data/
-checkpoints
+# Checkpoint weights
+*.pt
+experiments/checkpoints/
+checkpoints/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Cached embeddings
+data/cached_embeddings/

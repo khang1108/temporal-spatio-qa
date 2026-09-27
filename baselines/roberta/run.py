@@ -16,6 +16,7 @@ from tqdm import tqdm
 
 from src.dataset import load_stqad, get_vocabularies, STQADataset, collate_stqad_fn
 from src.evaluation import evaluate_benchmark, format_table5_markdown
+from src.checkpoint_utils import ensure_checkpoint, load_model_checkpoint
 from baselines.roberta.model import RoBERTaBaseline
 
 
@@ -33,6 +34,7 @@ def parse_args():
     parser.add_argument("--max_samples", type=int, default=None, help="Debug mode: limit train/val/test samples")
     parser.add_argument("--freeze_encoder", action="store_true", help="Freeze transformer backbone")
     parser.add_argument("--eval_only", action="store_true", help="Run evaluation using existing checkpoint")
+    parser.add_argument("--checkpoint_url", type=str, default=None, help="Download URL if checkpoint is not found locally")
     return parser.parse_args()
 
 
@@ -42,10 +44,11 @@ def evaluate(model, dataloader, id2entity, dataset_items, device, k=10):
 
     with torch.no_grad():
         for batch in tqdm(dataloader, desc="Evaluating", leave=False):
-            input_ids = batch["input_ids"].to(device)
-            attention_mask = batch["attention_mask"].to(device)
+            cls_rep = batch["cls_rep"].to(device) if batch.get("cls_rep") is not None else None
+            input_ids = batch["input_ids"].to(device) if batch.get("input_ids") is not None else None
+            attention_mask = batch["attention_mask"].to(device) if batch.get("attention_mask") is not None else None
 
-            topk_indices = model.predict_topk(input_ids, attention_mask, k=k)
+            topk_indices = model.predict_topk(input_ids, attention_mask, cls_rep=cls_rep, k=k)
             topk_indices = topk_indices.cpu().tolist()
 
             for indices in topk_indices:
@@ -74,6 +77,15 @@ def main():
     val_data = load_stqad("val", args.data_dir)
     test_data = load_stqad("test", args.data_dir)
 
+    # Check for cached embeddings
+    cached_dir = "data/cached_embeddings"
+    train_cached, val_cached, test_cached = None, None, None
+    if not args.max_samples and os.path.exists(os.path.join(cached_dir, "train_roberta_cls.pt")):
+        print("Found cached RoBERTa embeddings in data/cached_embeddings/! Fast CPU training enabled.")
+        train_cached = torch.load(os.path.join(cached_dir, "train_roberta_cls.pt"), map_location="cpu")
+        val_cached = torch.load(os.path.join(cached_dir, "val_roberta_cls.pt"), map_location="cpu")
+        test_cached = torch.load(os.path.join(cached_dir, "test_roberta_cls.pt"), map_location="cpu")
+
     if args.max_samples:
         train_data = train_data[:args.max_samples]
         val_data = val_data[:min(len(val_data), args.max_samples)]
@@ -83,9 +95,9 @@ def main():
     # Tokenizer & Datasets
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
 
-    train_dataset = STQADataset(train_data, tokenizer, entity2id, max_length=args.max_length)
-    val_dataset = STQADataset(val_data, tokenizer, entity2id, max_length=args.max_length)
-    test_dataset = STQADataset(test_data, tokenizer, entity2id, max_length=args.max_length)
+    train_dataset = STQADataset(train_data, tokenizer, entity2id, max_length=args.max_length, cached_cls=train_cached)
+    val_dataset = STQADataset(val_data, tokenizer, entity2id, max_length=args.max_length, cached_cls=val_cached)
+    test_dataset = STQADataset(test_data, tokenizer, entity2id, max_length=args.max_length, cached_cls=test_cached)
 
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, collate_fn=collate_stqad_fn)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, collate_fn=collate_stqad_fn)
@@ -111,12 +123,13 @@ def main():
             total_loss = 0.0
 
             for batch in tqdm(train_loader, desc=f"Epoch {epoch}/{args.epochs}"):
-                input_ids = batch["input_ids"].to(device)
-                attention_mask = batch["attention_mask"].to(device)
+                cls_rep = batch["cls_rep"].to(device) if batch.get("cls_rep") is not None else None
+                input_ids = batch["input_ids"].to(device) if batch.get("input_ids") is not None else None
+                attention_mask = batch["attention_mask"].to(device) if batch.get("attention_mask") is not None else None
                 target_dist = batch["target_dist"].to(device)
 
                 optimizer.zero_grad()
-                logits = model(input_ids, attention_mask)
+                logits = model(input_ids, attention_mask, cls_rep=cls_rep)
                 loss = model.compute_loss(logits, target_dist)
                 loss.backward()
                 optimizer.step()
@@ -137,10 +150,11 @@ def main():
                 torch.save(model.state_dict(), best_checkpoint)
                 print(f"  -> Saved new best model checkpoint to {best_checkpoint}")
 
-    # Final Test Evaluation
-    if os.path.exists(best_checkpoint):
-        print(f"Loading best checkpoint from {best_checkpoint} for test evaluation...")
-        model.load_state_dict(torch.load(best_checkpoint, map_location=device))
+    # Test Evaluation / Checkpoint Loading: checks whether have .pt files, if not downloads .pt files
+    if args.eval_only:
+        load_model_checkpoint(model, "roberta", checkpoint_path=best_checkpoint, url=args.checkpoint_url, device=device)
+    elif os.path.exists(best_checkpoint):
+        load_model_checkpoint(model, "roberta", checkpoint_path=best_checkpoint, url=args.checkpoint_url, device=device)
 
     test_results, test_preds = evaluate(model, test_loader, id2entity, test_data, device)
 

@@ -9,6 +9,9 @@ Outputs comparative results matching Table 5 from Dai et al. (KBS 2025).
 
 import os
 import sys
+# Ensure repository root is on sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import json
 import argparse
 from typing import Dict, Any
