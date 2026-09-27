@@ -64,7 +64,7 @@ def evaluate(model, dataloader, id2entity, dataset_items, device, k=10, return_d
 
 
 def main():
-    args = parse_args()
+    args = parse_args()k
     os.makedirs(args.output_dir, exist_ok=True)
     os.makedirs(args.pred_dir, exist_ok=True)
 
