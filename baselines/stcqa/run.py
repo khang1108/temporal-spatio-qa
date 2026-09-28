@@ -45,7 +45,12 @@ def parse_args():
 
 def extract_clue_triplet(raw_items, entity2id, device):
     """
-    Extracts central entity ID, temporal clue ID, and spatial clue ID for the batch.
+    Extracts clue triplet (Central Entity, Temporal Clue, Spatial Clue) for STCQA:
+      - STEP 1: Disentangle entities into roles via constraint-aware keyword matching (Section 5.2).
+      - STEP 2: Map Central Subject [ENT] to global KG entity ID.
+      - STEP 3: Map Temporal Clue [TS] to time bucket ID (modulo 600).
+      - STEP 4: Map Spatial Clue [GEO] to spatial grid bucket ID (modulo 2500).
+      - STEP 5: Collate into PyTorch tensors on the target device.
     """
     central_ids = []
     time_ids = []
@@ -54,9 +59,14 @@ def extract_clue_triplet(raw_items, entity2id, device):
     for item in raw_items:
         ents = item.get("entities", [])
         q_text = item.get("question", "")
+
+        # STEP 1: Determine functional entity roles
         central, time_clue, loc_clue = classify_question_clues(q_text, ents)
 
+        # STEP 2: Central entity vocabulary ID lookup
         c_id = entity2id.get(clean_entity(central), -1) if central else -1
+
+        # STEP 3 & 4: Bucket hashing for temporal and spatial clue representations
         t_id = (abs(hash(clean_entity(time_clue))) % 600) if time_clue else -1
         l_id = (abs(hash(clean_entity(loc_clue))) % 2500) if loc_clue else -1
 
@@ -64,12 +74,21 @@ def extract_clue_triplet(raw_items, entity2id, device):
         time_ids.append(t_id)
         loc_ids.append(l_id)
 
+    # STEP 5: Construct PyTorch long tensors
     return (torch.tensor(central_ids, dtype=torch.long, device=device),
             torch.tensor(time_ids, dtype=torch.long, device=device),
             torch.tensor(loc_ids, dtype=torch.long, device=device))
 
 
 def evaluate(model, dataloader, id2entity, entity2id, dataset_items, device, k=10, return_details=False):
+    """
+    Evaluates STCQA on STQAD benchmark:
+      - STEP 1: Batched multi-modal clue extraction (Question + Subject + Time + Space).
+      - STEP 2: Forward pass through STCQA Fusion Network to score all candidate entities.
+      - STEP 3: Retrieve top candidate pool (top-25).
+      - STEP 4: Apply Answer Filtering Module (Section 3.5) to enforce spatio-temporal constraints.
+      - STEP 5: Compute Hits@1 and Hits@10 across question categories (DC, DTC, DDC, SDC, STC).
+    """
     model.eval()
     filter_module = ConstraintFilter()
     all_predictions = []
@@ -81,8 +100,10 @@ def evaluate(model, dataloader, id2entity, entity2id, dataset_items, device, k=1
             attention_mask = batch["attention_mask"].to(device) if batch.get("attention_mask") is not None else None
             raw_items = batch["raw_items"]
 
+            # STEP 1: Clue triplet tensor extraction
             c_ids, t_ids, l_ids = extract_clue_triplet(raw_items, entity2id, device)
 
+            # STEP 2 & 3: Model scoring and candidate pool retrieval (top-25)
             topk_indices, topk_scores = model.predict_topk(
                 input_ids, attention_mask, c_ids, t_ids, l_ids, cls_rep=cls_rep, k=25
             )
@@ -90,6 +111,7 @@ def evaluate(model, dataloader, id2entity, entity2id, dataset_items, device, k=1
             topk_indices = topk_indices.cpu().tolist()
             topk_scores = topk_scores.cpu().tolist()
 
+            # STEP 4: Post-processing constraint filtering & reranking
             for item, indices, scores in zip(raw_items, topk_indices, topk_scores):
                 cand_names = [id2entity.get(idx, f"<unk_{idx}>") for idx in indices]
                 q_text = item.get("question", "")
@@ -110,6 +132,7 @@ def evaluate(model, dataloader, id2entity, entity2id, dataset_items, device, k=1
 
                 all_predictions.append(filtered_cands[:k])
 
+    # STEP 5: Metric calculation across all categories
     if return_details:
         results, sample_details, failure_summary = evaluate_benchmark(all_predictions, dataset_items, return_details=True)
         return results, all_predictions, sample_details, failure_summary

@@ -40,7 +40,12 @@ def parse_args():
 
 def extract_batch_entities(raw_items, entity2id, device):
     """
-    Extracts central entity ID (first entity mentioned) and temporal clue ID (second entity if present).
+    Extracts entity IDs for MultiQA (Temporal KGQA baseline):
+      - STEP 1: Disentangle entities into Central Subject [ENT] and Temporal Clue [TS] (Section 5.2).
+      - STEP 2: Map Central Subject [ENT] to global KG entity ID.
+      - STEP 3: Map Temporal Clue [TS] to time bucket ID (modulo 600).
+                (Note: MultiQA has no spatial embedding or spatial reasoning module).
+      - STEP 4: Collate into PyTorch tensors on the target device.
     """
     subj_ids = []
     time_ids = []
@@ -48,19 +53,33 @@ def extract_batch_entities(raw_items, entity2id, device):
     for item in raw_items:
         ents = item.get("entities", [])
         q_text = item.get("question", "")
+
+        # STEP 1: Determine functional entity roles
         central, time_clue, _ = classify_question_clues(q_text, ents)
 
+        # STEP 2: Central entity vocabulary ID lookup
         s_id = entity2id.get(clean_entity(central), -1) if central else -1
+
+        # STEP 3: Bucket hashing for temporal clue representation
         t_id = (abs(hash(clean_entity(time_clue))) % 600) if time_clue else -1
 
         subj_ids.append(s_id)
         time_ids.append(t_id)
 
+    # STEP 4: Construct PyTorch long tensors
     return (torch.tensor(subj_ids, dtype=torch.long, device=device),
             torch.tensor(time_ids, dtype=torch.long, device=device))
 
 
 def evaluate(model, dataloader, id2entity, entity2id, dataset_items, device, k=10, return_details=False):
+    """
+    Evaluates MultiQA on STQAD benchmark:
+      - STEP 1: Batched temporal clue extraction (Question + Subject + Time).
+      - STEP 2: Forward pass through MultiQA fusion network.
+      - STEP 3: Retrieve top-k candidate entities from output logits.
+      - STEP 4: Map predicted indices to entity names.
+      - STEP 5: Compute Hits@1 and Hits@10 across question categories.
+    """
     model.eval()
     all_predictions = []
 
@@ -69,15 +88,20 @@ def evaluate(model, dataloader, id2entity, entity2id, dataset_items, device, k=1
             cls_rep = batch["cls_rep"].to(device) if batch.get("cls_rep") is not None else None
             input_ids = batch["input_ids"].to(device) if batch.get("input_ids") is not None else None
             attention_mask = batch["attention_mask"].to(device) if batch.get("attention_mask") is not None else None
+
+            # STEP 1: Subject and temporal clue tensor extraction
             subj_ids, time_ids = extract_batch_entities(batch["raw_items"], entity2id, device)
 
+            # STEP 2 & 3: Model scoring and top-k candidate retrieval
             topk_indices = model.predict_topk(input_ids, attention_mask, subj_ids, time_ids, cls_rep=cls_rep, k=k)
             topk_indices = topk_indices.cpu().tolist()
 
+            # STEP 4: Map indices to entity names
             for indices in topk_indices:
                 cand_names = [id2entity.get(idx, f"<unk_{idx}>") for idx in indices]
                 all_predictions.append(cand_names)
 
+    # STEP 5: Metric calculation across all categories
     if return_details:
         results, sample_details, failure_summary = evaluate_benchmark(all_predictions, dataset_items, return_details=True)
         return results, all_predictions, sample_details, failure_summary

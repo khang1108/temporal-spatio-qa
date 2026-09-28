@@ -39,6 +39,14 @@ def parse_args():
 
 
 def evaluate(model, dataloader, id2entity, dataset_items, device, k=10, return_details=False):
+    """
+    Evaluates RoBERTa-base baseline on STQAD benchmark:
+      - STEP 1: Pass question text (or precomputed CLS representation) through RoBERTa.
+      - STEP 2: Linear projection from 768-d CLS vector to entity vocabulary logits.
+      - STEP 3: Retrieve top-k candidate entity indices.
+      - STEP 4: Convert IDs to entity names.
+      - STEP 5: Compute benchmark evaluation metrics (Hits@1, Hits@10).
+    """
     model.eval()
     all_predictions = []
 
@@ -48,13 +56,16 @@ def evaluate(model, dataloader, id2entity, dataset_items, device, k=10, return_d
             input_ids = batch["input_ids"].to(device) if batch.get("input_ids") is not None else None
             attention_mask = batch["attention_mask"].to(device) if batch.get("attention_mask") is not None else None
 
+            # STEP 1, 2 & 3: Model scoring and top-k candidate retrieval
             topk_indices = model.predict_topk(input_ids, attention_mask, cls_rep=cls_rep, k=k)
             topk_indices = topk_indices.cpu().tolist()
 
+            # STEP 4: Convert indices to entity names
             for indices in topk_indices:
                 cand_names = [id2entity.get(idx, f"<unk_{idx}>") for idx in indices]
                 all_predictions.append(cand_names)
 
+    # STEP 5: Metric calculation across all categories
     if return_details:
         results, sample_details, failure_summary = evaluate_benchmark(all_predictions, dataset_items, return_details=True)
         return results, all_predictions, sample_details, failure_summary

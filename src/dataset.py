@@ -29,23 +29,36 @@ _TEMPORAL_PATTERN = re.compile(
 
 def classify_question_clues(q_text: str, entities: List[str]) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     """
-    Classifies entities in a question into:
-      - Central Entity [ENT]
-      - Temporal Clue Entity [TS]
-      - Spatial Clue Entity [GEO]
-    Following Section 5.2 of Dai et al. (KBS 2025):
-    "The determination of entity types relies on constraint keywords that precede the entities,
-     such as before, northeast of, and within 3 miles of."
+    Classifies entities mentioned in a question into their functional spatio-temporal roles:
+      - Central Entity [ENT]: Subject of the query around which knowledge subgraphs expand
+      - Temporal Clue Entity [TS]: Anchor for temporal intervals (e.g. lifetime/events)
+      - Spatial Clue Entity [GEO]: Anchor for geographic coordinates / spatial relationships
+
+    Algorithm follows Section 5.2 of Dai et al. (KBS 2025):
+      "The determination of entity types relies on constraint keywords that precede the entities,
+       such as before, northeast of, and within 3 miles of."
     """
     q_lower = q_text.lower()
     assigned: Dict[str, str] = {}
     ent_positions = []
 
+    # =========================================================================
+    # STEP 1: Locate Character Positions of All Candidate Entities in Question
+    # =========================================================================
+    # Strip markup (e.g., '<' and '>') and normalize text to locate exact offset
+    # positions within the lowercased question string.
     for e in entities:
         clean_e = clean_entity(e).lower().strip("<>")
         pos = q_lower.find(clean_e)
         ent_positions.append((e, clean_e, pos))
 
+    # =========================================================================
+    # STEP 2: Preceding Context Window Extraction & Keyword Matching
+    # =========================================================================
+    # Check the immediate 50-character prefix preceding each entity mention.
+    # Constraint keywords (directional / temporal phrases) indicate clue roles:
+    #   - Spatial keywords ('northeast of', 'within 5 miles') -> 'loc' [GEO]
+    #   - Temporal keywords ('later than the termination of', 'prior to') -> 'time' [TS]
     for e, clean_e, pos in ent_positions:
         if pos == -1:
             continue
@@ -55,6 +68,12 @@ def classify_question_clues(q_text: str, entities: List[str]) -> Tuple[Optional[
         elif _TEMPORAL_PATTERN.search(prefix):
             assigned[e] = 'time'
 
+    # =========================================================================
+    # STEP 3: Assign Functional Roles Based on Classified Constraints
+    # =========================================================================
+    # - Spatial entity -> loc_clue
+    # - Temporal entity -> time_clue
+    # - Unconstrained entity -> central entity (subject of the question)
     central: Optional[str] = None
     time_clue: Optional[str] = None
     loc_clue: Optional[str] = None
@@ -68,7 +87,11 @@ def classify_question_clues(q_text: str, entities: List[str]) -> Tuple[Optional[
         elif central is None:
             central = e
 
-    # Fallback assignment for any unassigned clues
+    # =========================================================================
+    # STEP 4: Fallback Assignment for Any Unassigned Clue Slots
+    # =========================================================================
+    # If a question lacks explicit keyword prefixes or entity linking missed
+    # explicit markers, assign remaining entities to unpopulated clue slots.
     for e, _, _ in ent_positions:
         if e != central and e != time_clue and e != loc_clue:
             if time_clue is None:
@@ -76,6 +99,9 @@ def classify_question_clues(q_text: str, entities: List[str]) -> Tuple[Optional[
             elif loc_clue is None:
                 loc_clue = e
 
+    # =========================================================================
+    # STEP 5: Return Triplet of Classified Entities
+    # =========================================================================
     return central, time_clue, loc_clue
 
 
@@ -137,7 +163,12 @@ class STQADataset(Dataset):
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         item = self.data[idx]
 
-        # Multi-target answer vector
+        # =====================================================================
+        # STEP 1: Build Multi-Target Binary Vector & Normalized Distribution
+        # =====================================================================
+        # Many questions in STQAD have multiple valid answer entities.
+        # target_vec: binary float vector of size [num_entities] (for BCE loss)
+        # target_dist: normalized probability vector summing to 1.0 (for KL/CE)
         target_vec = torch.zeros(self.num_entities, dtype=torch.float32)
         ans = item.get("answers", [])
         if isinstance(ans, str):
@@ -154,6 +185,9 @@ class STQADataset(Dataset):
         num_targets = len(target_ids)
         target_dist = target_vec / max(1, num_targets)
 
+        # =====================================================================
+        # STEP 2: Extract Mentioned Entity IDs from Question
+        # =====================================================================
         question_entity_ids = []
         for e in item.get("entities", []):
             cleaned = clean_entity(e)
@@ -168,7 +202,11 @@ class STQADataset(Dataset):
             "raw_item": item
         }
 
-        # If cached embeddings are available, avoid re-tokenizing on the fly
+        # =====================================================================
+        # STEP 3: Encode Question Text or Use Precomputed CLS Embeddings
+        # =====================================================================
+        # If precomputed RoBERTa CLS tensors exist, bypass tokenizer for fast training;
+        # otherwise, tokenize on-the-fly with padding and truncation.
         if self.cached_cls is not None:
             result["cls_rep"] = self.cached_cls[idx]
             result["input_ids"] = torch.zeros(1, dtype=torch.long)
@@ -192,7 +230,12 @@ class STQADataset(Dataset):
 
 
 def collate_stqad_fn(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Custom collate function for DataLoader."""
+    """
+    Custom collate function for DataLoader batching:
+      - STEP 1: Stack target binary vectors and probability distributions.
+      - STEP 2: Package raw sample dictionaries and entity metadata.
+      - STEP 3: Stack token IDs and attention masks (or cached CLS embeddings).
+    """
     target_vec = torch.stack([b["target_vec"] for b in batch])
     target_dist = torch.stack([b["target_dist"] for b in batch])
     raw_items = [b["raw_item"] for b in batch]
