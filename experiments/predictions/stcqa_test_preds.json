@@ -3,53 +3,53 @@
   "metrics": {
     "Overall": {
       "count": 1063,
-      "Hits@1": 31.51,
-      "Hits@3": 34.81,
-      "Hits@10": 38.95
+      "Hits@1": 30.39,
+      "Hits@3": 33.96,
+      "Hits@10": 38.10
     },
     "DTC": {
       "count": 28,
-      "Hits@1": 53.57,
-      "Hits@3": 60.71,
-      "Hits@10": 60.71
+      "Hits@1": 57.14,
+      "Hits@3": 64.29,
+      "Hits@10": 64.29
     },
     "STC": {
       "count": 1035,
-      "Hits@1": 30.92,
-      "Hits@3": 34.11,
-      "Hits@10": 38.36
+      "Hits@1": 29.66,
+      "Hits@3": 33.14,
+      "Hits@10": 37.39
     },
     "DDC": {
       "count": 330,
-      "Hits@1": 3.33,
-      "Hits@3": 6.06,
-      "Hits@10": 10.3
+      "Hits@1": 2.12,
+      "Hits@3": 5.45,
+      "Hits@10": 8.79
     },
     "SDC": {
       "count": 378,
-      "Hits@1": 3.44,
-      "Hits@3": 9.26,
-      "Hits@10": 16.14
+      "Hits@1": 3.70,
+      "Hits@3": 8.47,
+      "Hits@10": 15.34
     },
     "DC": {
       "count": 355,
-      "Hits@1": 87.61,
-      "Hits@3": 88.73,
-      "Hits@10": 89.86
+      "Hits@1": 85.07,
+      "Hits@3": 87.89,
+      "Hits@10": 89.58
     }
   },
   "failure_summary": {
     "total_samples": 1063,
-    "total_failed_hit1": 728,
-    "total_failed_hit10": 649,
+    "total_failed_hit1": 740,
+    "total_failed_hit10": 658,
     "failed_by_temporal": {
-      "DTC": 11,
-      "STC": 638
+      "DTC": 10,
+      "STC": 648
     },
     "failed_by_spatial": {
-      "DC": 36,
-      "DDC": 296,
-      "SDC": 317
+      "DC": 37,
+      "DDC": 301,
+      "SDC": 320
     }
   },
   "predictions": [
