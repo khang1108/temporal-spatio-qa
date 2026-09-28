@@ -16,6 +16,70 @@ def clean_entity(entity_str: str) -> str:
     return entity_str.strip().rstrip(",").strip()
 
 
+_SPATIAL_PATTERN = re.compile(
+    r'\b(northeast|northwest|southeast|southwest|north|south|east|west|within\s+\d+\s+miles)\b',
+    re.IGNORECASE
+)
+
+_TEMPORAL_PATTERN = re.compile(
+    r'\b(later than|posterior to|prior to|cessation|dissolution|termination|founded|during|while|before|after)\b',
+    re.IGNORECASE
+)
+
+
+def classify_question_clues(q_text: str, entities: List[str]) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+    """
+    Classifies entities in a question into:
+      - Central Entity [ENT]
+      - Temporal Clue Entity [TS]
+      - Spatial Clue Entity [GEO]
+    Following Section 5.2 of Dai et al. (KBS 2025):
+    "The determination of entity types relies on constraint keywords that precede the entities,
+     such as before, northeast of, and within 3 miles of."
+    """
+    q_lower = q_text.lower()
+    assigned: Dict[str, str] = {}
+    ent_positions = []
+
+    for e in entities:
+        clean_e = clean_entity(e).lower().strip("<>")
+        pos = q_lower.find(clean_e)
+        ent_positions.append((e, clean_e, pos))
+
+    for e, clean_e, pos in ent_positions:
+        if pos == -1:
+            continue
+        prefix = q_lower[max(0, pos - 50):pos]
+        if _SPATIAL_PATTERN.search(prefix):
+            assigned[e] = 'loc'
+        elif _TEMPORAL_PATTERN.search(prefix):
+            assigned[e] = 'time'
+
+    central: Optional[str] = None
+    time_clue: Optional[str] = None
+    loc_clue: Optional[str] = None
+
+    for e, _, _ in ent_positions:
+        role = assigned.get(e)
+        if role == 'loc' and loc_clue is None:
+            loc_clue = e
+        elif role == 'time' and time_clue is None:
+            time_clue = e
+        elif central is None:
+            central = e
+
+    # Fallback assignment for any unassigned clues
+    for e, _, _ in ent_positions:
+        if e != central and e != time_clue and e != loc_clue:
+            if time_clue is None:
+                time_clue = e
+            elif loc_clue is None:
+                loc_clue = e
+
+    return central, time_clue, loc_clue
+
+
+
 def get_vocabularies(data_dir: str = "data/stqad") -> Tuple[Dict[str, int], Dict[int, str], Dict[str, int], Dict[int, str]]:
     """Loads entity and relation vocabularies."""
     entity_path = os.path.join(data_dir, "entity2id.json")

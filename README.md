@@ -32,7 +32,6 @@ Spatial-Temporal-KG/
 │   ├── checkpoint_utils.py          # Auto-download and verification for .pt weights
 │   ├── dataset.py                   # PyTorch Dataset & DataLoader
 │   ├── evaluation.py                # Hits@1, Hits@3, Hits@10 with constraint breakdown
-│   ├── precompute_embeddings.py     # Offline LM embedding cache script
 │   ├── utils_geo.py                 # Haversine distance and direction checking
 │   └── utils_time.py                # Interval and timestamp comparison logic
 ├── baselines/
@@ -53,7 +52,9 @@ Spatial-Temporal-KG/
 │   └── benchmark_report.md          # Generated Table 5 comparative report
 ├── scripts/
 │   ├── benchmark.py                 # Aggregates and formats comparative benchmark
-│   └── download_checkpoints.py      # Standalone CLI tool to download .pt checkpoints
+│   ├── download_checkpoints.py      # Standalone CLI tool to download .pt checkpoints
+│   ├── precompute_embeddings.py     # Offline LM embedding cache script
+│   └── analyze_failures.py          # Failure analysis and error inspection tool
 ├── requirements.txt
 └── README.md
 ```

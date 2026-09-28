@@ -18,8 +18,8 @@ Reproducing **Dai et al. (KBS 2025)** on the **STQAD** benchmark dataset (1,063 
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | STCQA | Paper Ref | Hits@1 | 61.52% | 60.71% | 61.55% | 63.01% | 63.25% | 53.52% |
 | STCQA | Paper Ref | Hits@10 | 84.29% | 82.14% | 84.38% | 83.82% | 82.32% | 86.76% |
-| STCQA | Reproduced | Hits@1 | 0.94% | 0.00% | 0.97% | 1.21% | 1.59% | 0.00% |
-| STCQA | Reproduced | Hits@10 | 10.16% | 7.14% | 10.24% | 9.09% | 15.34% | 5.63% |
+| STCQA | Reproduced | Hits@1 | 31.51% | 53.57% | 30.92% | 3.33% | 3.44% | 87.61% |
+| STCQA | Reproduced | Hits@10 | 38.95% | 60.71% | 38.36% | 10.30% | 16.14% | 89.86% |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 
 ### Constraint Categories:

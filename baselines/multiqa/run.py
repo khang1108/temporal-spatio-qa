@@ -14,7 +14,7 @@ from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
 from tqdm import tqdm
 
-from src.dataset import load_stqad, get_vocabularies, STQADataset, collate_stqad_fn, clean_entity
+from src.dataset import load_stqad, get_vocabularies, STQADataset, collate_stqad_fn, clean_entity, classify_question_clues
 from src.evaluation import evaluate_benchmark, format_table5_markdown
 from src.checkpoint_utils import ensure_checkpoint, load_model_checkpoint
 from baselines.multiqa.model import MultiQABaseline
@@ -47,17 +47,11 @@ def extract_batch_entities(raw_items, entity2id, device):
 
     for item in raw_items:
         ents = item.get("entities", [])
-        s_id = -1
-        t_id = -1
+        q_text = item.get("question", "")
+        central, time_clue, _ = classify_question_clues(q_text, ents)
 
-        if len(ents) > 0:
-            c_name = clean_entity(ents[0])
-            s_id = entity2id.get(c_name, -1)
-
-        if len(ents) > 1:
-            t_name = clean_entity(ents[1])
-            # Hash or map clue to a timestamp bucket
-            t_id = abs(hash(t_name)) % 600
+        s_id = entity2id.get(clean_entity(central), -1) if central else -1
+        t_id = (abs(hash(clean_entity(time_clue))) % 600) if time_clue else -1
 
         subj_ids.append(s_id)
         time_ids.append(t_id)

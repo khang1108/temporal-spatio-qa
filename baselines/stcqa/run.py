@@ -18,7 +18,7 @@ from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
 from tqdm import tqdm
 
-from src.dataset import load_stqad, get_vocabularies, STQADataset, collate_stqad_fn, clean_entity
+from src.dataset import load_stqad, get_vocabularies, STQADataset, collate_stqad_fn, clean_entity, classify_question_clues
 from src.evaluation import evaluate_benchmark, format_table5_markdown
 from src.checkpoint_utils import ensure_checkpoint, load_model_checkpoint
 from baselines.stcqa.model import STCQAModel
@@ -53,17 +53,12 @@ def extract_clue_triplet(raw_items, entity2id, device):
 
     for item in raw_items:
         ents = item.get("entities", [])
-        c_id, t_id, l_id = -1, -1, -1
+        q_text = item.get("question", "")
+        central, time_clue, loc_clue = classify_question_clues(q_text, ents)
 
-        if len(ents) > 0:
-            c_name = clean_entity(ents[0])
-            c_id = entity2id.get(c_name, -1)
-        if len(ents) > 1:
-            t_name = clean_entity(ents[1])
-            t_id = abs(hash(t_name)) % 600
-        if len(ents) > 2:
-            l_name = clean_entity(ents[2])
-            l_id = abs(hash(l_name)) % 2500
+        c_id = entity2id.get(clean_entity(central), -1) if central else -1
+        t_id = (abs(hash(clean_entity(time_clue))) % 600) if time_clue else -1
+        l_id = (abs(hash(clean_entity(loc_clue))) % 2500) if loc_clue else -1
 
         central_ids.append(c_id)
         time_ids.append(t_id)
@@ -100,8 +95,9 @@ def evaluate(model, dataloader, id2entity, entity2id, dataset_items, device, k=1
                 q_text = item.get("question", "")
 
                 ents = item.get("entities", [])
-                t_clue = clean_entity(ents[1]) if len(ents) > 1 else None
-                s_clue = clean_entity(ents[2]) if len(ents) > 2 else None
+                _, t_clue, s_clue = classify_question_clues(q_text, ents)
+                t_clue = clean_entity(t_clue) if t_clue else None
+                s_clue = clean_entity(s_clue) if s_clue else None
 
                 # Answer Filtering Module: re-rank top candidates based on constraints
                 filtered_cands = filter_module.filter_and_rerank(
