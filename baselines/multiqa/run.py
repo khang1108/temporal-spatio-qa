@@ -111,22 +111,41 @@ def evaluate(model, dataloader, id2entity, entity2id, dataset_items, device, k=1
 
 
 def main():
+    # =========================================================================
+    # STEP 1: Parse Command-Line Arguments & Initialize Directory Structure
+    # =========================================================================
+    # - args.output_dir: directory to store model checkpoints (e.g. best_model.pt)
+    # - args.pred_dir: directory to store JSON prediction logs & evaluation outputs
     args = parse_args()
     os.makedirs(args.output_dir, exist_ok=True)
     os.makedirs(args.pred_dir, exist_ok=True)
 
+    # =========================================================================
+    # STEP 2: Configure Hardware Compute Device (CUDA GPU / CPU)
+    # =========================================================================
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"MultiQA - Using device: {device}")
 
-    # Vocabularies
+    # =========================================================================
+    # STEP 3: Load Knowledge Graph Vocabularies & Entity-to-ID Mappings
+    # =========================================================================
+    # Loads entity2id and relation2id to map textual entities into integer index spaces.
     entity2id, id2entity, relation2id, id2relation = get_vocabularies(args.data_dir)
     num_entities = len(entity2id)
 
-    # Datasets
+    # =========================================================================
+    # STEP 4: Load Dataset Splits (Train, Validation, Test)
+    # =========================================================================
+    # STQAD json splits containing questions, paraphrase variants, entities, and answers.
     train_data = load_stqad("train", args.data_dir)
     val_data = load_stqad("val", args.data_dir)
     test_data = load_stqad("test", args.data_dir)
 
+    # =========================================================================
+    # STEP 5: Check & Load Precomputed RoBERTa CLS Embeddings (Cache Acceleration)
+    # =========================================================================
+    # If cached CLS vectors exist under data/cached_embeddings/, bypass on-the-fly
+    # transformer forward passes to drastically speed up training on CPU/GPU.
     cached_dir = "data/cached_embeddings"
     train_cached, val_cached, test_cached = None, None, None
     if not args.max_samples and os.path.exists(os.path.join(cached_dir, "train_roberta_cls.pt")):
@@ -140,6 +159,9 @@ def main():
         val_data = val_data[:min(len(val_data), args.max_samples)]
         test_data = test_data[:min(len(test_data), args.max_samples)]
 
+    # =========================================================================
+    # STEP 6: Initialize Text Tokenizer & PyTorch DataLoaders
+    # =========================================================================
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
 
     train_dataset = STQADataset(train_data, tokenizer, entity2id, max_length=args.max_length, cached_cls=train_cached)
@@ -150,6 +172,15 @@ def main():
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, collate_fn=collate_stqad_fn)
     test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False, collate_fn=collate_stqad_fn)
 
+    # =========================================================================
+    # STEP 7: Initialize MultiQA Temporal Baseline Model Architecture
+    # =========================================================================
+    # Components:
+    #   - Text Encoder: RoBERTa-base (768-d text representations)
+    #   - Subject Entity Embedding: [num_entities, 512]
+    #   - Temporal Bucket Embedding: [600, 512]
+    #   - (Note: MultiQA has NO spatial reasoning or geo-coordinate embeddings)
+    #   - Fusion: Element-wise fusion / Concatenation projection head
     model = MultiQABaseline(
         model_name=args.model_name,
         num_entities=num_entities,
@@ -159,6 +190,9 @@ def main():
 
     best_checkpoint = os.path.join(args.output_dir, "best_model.pt")
 
+    # =========================================================================
+    # STEP 8: Training Loop with Validation & Early Checkpointing (If Not eval_only)
+    # =========================================================================
     if not args.eval_only:
         optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-2)
         best_val_hits1 = -1.0
@@ -173,6 +207,8 @@ def main():
                 input_ids = batch["input_ids"].to(device) if batch.get("input_ids") is not None else None
                 attention_mask = batch["attention_mask"].to(device) if batch.get("attention_mask") is not None else None
                 target_dist = batch["target_dist"].to(device)
+
+                # Extract Central Subject & Temporal Clue
                 subj_ids, time_ids = extract_batch_entities(batch["raw_items"], entity2id, device)
 
                 optimizer.zero_grad()
@@ -185,25 +221,37 @@ def main():
 
             avg_loss = total_loss / len(train_loader)
 
+            # Evaluate on Validation split to track progress
             val_results, _ = evaluate(model, val_loader, id2entity, entity2id, val_data, device)
             val_hits1 = val_results["Overall"]["Hits@1"]
             val_hits10 = val_results["Overall"]["Hits@10"]
 
             print(f"Epoch {epoch}: Train Loss = {avg_loss:.4f} | Val Hits@1 = {val_hits1:.2f}% | Val Hits@10 = {val_hits10:.2f}%")
 
+            # Checkpoint best model based on validation Hits@1
             if val_hits1 > best_val_hits1:
                 best_val_hits1 = val_hits1
                 torch.save(model.state_dict(), best_checkpoint)
-    # Test Evaluation / Checkpoint Loading: checks whether have .pt files, if not downloads .pt files
+
+    # =========================================================================
+    # STEP 9: Load Best Checkpoint for Evaluation
+    # =========================================================================
+    # Checks whether local best_model.pt exists; if absent, attempts download from URL
     if args.eval_only:
         load_model_checkpoint(model, "multiqa", checkpoint_path=best_checkpoint, url=args.checkpoint_url, device=device)
     elif os.path.exists(best_checkpoint):
         load_model_checkpoint(model, "multiqa", checkpoint_path=best_checkpoint, url=args.checkpoint_url, device=device)
 
+    # =========================================================================
+    # STEP 10: Run Final Evaluation on Test Split (Temporal Baseline Ranking)
+    # =========================================================================
     test_results, test_preds, sample_details, failure_summary = evaluate(
         model, test_loader, id2entity, entity2id, test_data, device, return_details=True
     )
 
+    # =========================================================================
+    # STEP 11: Export Predictions, Metrics, and Failure Diagnostic Logs
+    # =========================================================================
     pred_file = os.path.join(args.pred_dir, "multiqa_test_preds.json")
     with open(pred_file, "w", encoding="utf-8") as f:
         json.dump({
@@ -214,6 +262,9 @@ def main():
             "sample_details": sample_details
         }, f, indent=2)
 
+    # =========================================================================
+    # STEP 12: Display Benchmark Report (Table 5 Format) & Error Statistics
+    # =========================================================================
     print("\n" + "=" * 50)
     print("MultiQA Final Test Evaluation on STQAD:")
     print("=" * 50)
