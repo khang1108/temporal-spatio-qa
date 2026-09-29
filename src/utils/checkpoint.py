@@ -195,13 +195,13 @@ def load_model(model_name: str,
         model = MultiQABaseline(**defaults).to(dev)
 
     elif norm_name == "stcqa":
-        from baselines.stcqa.model import STCQAModel
+        from src.models.stcqa.model import STCQAModel
         defaults = {
             "model_name": "roberta-base",
             "num_entities": 5897,
-            "num_relations": 20,
-            "num_timestamps": 600,
-            "num_locations": 2500,
+            "num_relations": 32,
+            "num_timestamps": 170,
+            "num_locations": 1352,
             "embedding_dim": 512
         }
         defaults.update(model_kwargs)

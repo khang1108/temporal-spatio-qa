@@ -12,7 +12,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from transformers import AutoModel
-from baselines.stcqa.st_embedding import STComplExEmbedding, complex_mul
+from src.models.stcqa.st_embedding import STComplExEmbedding, complex_mul
 
 
 class STCQAModel(nn.Module):

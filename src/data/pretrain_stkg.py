@@ -22,7 +22,7 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
 
-from baselines.stcqa.st_embedding import STComplExEmbedding, complex_mul
+from src.models.stcqa.st_embedding import STComplExEmbedding, complex_mul
 
 
 class STKGFactsDataset(Dataset):
@@ -311,6 +311,7 @@ if __name__ == "__main__":
     parser.add_argument("--stkg_dir", type=str, default="data/stkg")
     parser.add_argument("--max_samples", type=int, default=None, help="Limit number of facts for rapid dry-run test")
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
+    parser.add_argument("--seed", type=int, default=42, help="Random seed for data split and initialization (default: 42)")
     args = parser.parse_args()
 
     pretrain_stkg(
@@ -322,5 +323,6 @@ if __name__ == "__main__":
         reg_weight=args.reg_weight,
         embedding_dim=args.embedding_dim,
         device_str=args.device,
-        max_samples=args.max_samples
+        max_samples=args.max_samples,
+        seed=args.seed
     )
