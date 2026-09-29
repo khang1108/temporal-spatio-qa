@@ -27,7 +27,9 @@ _TEMPORAL_PATTERN = re.compile(
 )
 
 
-def classify_question_clues(q_text: str, entities: List[str]) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+def classify_question_clues(q_text: str,
+                            entities: Optional[List[str]] = None,
+                            entity_vocab: Optional[Dict[str, int]] = None) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     """
     Classifies entities mentioned in a question into their functional spatio-temporal roles:
       - Central Entity [ENT]: Subject of the query around which knowledge subgraphs expand
@@ -39,41 +41,57 @@ def classify_question_clues(q_text: str, entities: List[str]) -> Tuple[Optional[
        such as before, northeast of, and within 3 miles of."
     """
     q_lower = q_text.lower()
-    assigned: Dict[str, str] = {}
+
+    # =========================================================================
+    # STEP 1: Extract Entities Directly from Question Text & Filter Vocabulary
+    # =========================================================================
+    text_tags = [clean_entity(t) for t in re.findall(r'<[^>]+>', q_text)]
+    if entity_vocab:
+        cand_ents = [t for t in text_tags if t in entity_vocab]
+    else:
+        cand_ents = text_tags
+
+    # If question text has no tags or candidate entities are empty, fallback to entities list
+    if not cand_ents and entities:
+        cand_ents = [clean_entity(e) for e in entities]
+    elif entities:
+        # Include any provided entities that actually appear in the question text
+        for e in entities:
+            ce = clean_entity(e)
+            if ce.lower().strip("<>") in q_lower and ce not in cand_ents:
+                cand_ents.append(ce)
+
+    # =========================================================================
+    # STEP 2: Preceding Context Window Extraction & Closest Keyword Matching
+    # =========================================================================
     ent_positions = []
-
-    # =========================================================================
-    # STEP 1: Locate Character Positions of All Candidate Entities in Question
-    # =========================================================================
-    # Strip markup (e.g., '<' and '>') and normalize text to locate exact offset
-    # positions within the lowercased question string.
-    for e in entities:
-        clean_e = clean_entity(e).lower().strip("<>")
+    for e in cand_ents:
+        clean_e = e.lower().strip("<>")
         pos = q_lower.find(clean_e)
-        ent_positions.append((e, clean_e, pos))
+        if pos != -1:
+            ent_positions.append((e, clean_e, pos))
 
-    # =========================================================================
-    # STEP 2: Preceding Context Window Extraction & Keyword Matching
-    # =========================================================================
-    # Check the immediate 50-character prefix preceding each entity mention.
-    # Constraint keywords (directional / temporal phrases) indicate clue roles:
-    #   - Spatial keywords ('northeast of', 'within 5 miles') -> 'loc' [GEO]
-    #   - Temporal keywords ('later than the termination of', 'prior to') -> 'time' [TS]
+    assigned: Dict[str, str] = {}
     for e, clean_e, pos in ent_positions:
-        if pos == -1:
-            continue
-        prefix = q_lower[max(0, pos - 50):pos]
-        if _SPATIAL_PATTERN.search(prefix):
+        # Check immediate 60-character prefix preceding the entity mention
+        prefix = q_lower[max(0, pos - 60):pos]
+        s_matches = list(_SPATIAL_PATTERN.finditer(prefix))
+        t_matches = list(_TEMPORAL_PATTERN.finditer(prefix))
+        s_last = s_matches[-1].end() if s_matches else -1
+        t_last = t_matches[-1].end() if t_matches else -1
+
+        # Assign role based on which constraint keyword is closest to the entity
+        if s_last > t_last:
             assigned[e] = 'loc'
-        elif _TEMPORAL_PATTERN.search(prefix):
+        elif t_last > s_last:
             assigned[e] = 'time'
 
     # =========================================================================
     # STEP 3: Assign Functional Roles Based on Classified Constraints
     # =========================================================================
-    # - Spatial entity -> loc_clue
-    # - Temporal entity -> time_clue
-    # - Unconstrained entity -> central entity (subject of the question)
+    # Entities preceded by spatial constraint keywords -> loc_clue
+    # Entities preceded by temporal constraint keywords -> time_clue
+    # Unconstrained entity -> central entity (subject of the question)
     central: Optional[str] = None
     time_clue: Optional[str] = None
     loc_clue: Optional[str] = None
@@ -87,21 +105,6 @@ def classify_question_clues(q_text: str, entities: List[str]) -> Tuple[Optional[
         elif central is None:
             central = e
 
-    # =========================================================================
-    # STEP 4: Fallback Assignment for Any Unassigned Clue Slots
-    # =========================================================================
-    # If a question lacks explicit keyword prefixes or entity linking missed
-    # explicit markers, assign remaining entities to unpopulated clue slots.
-    for e, _, _ in ent_positions:
-        if e != central and e != time_clue and e != loc_clue:
-            if time_clue is None:
-                time_clue = e
-            elif loc_clue is None:
-                loc_clue = e
-
-    # =========================================================================
-    # STEP 5: Return Triplet of Classified Entities
-    # =========================================================================
     return central, time_clue, loc_clue
 
 

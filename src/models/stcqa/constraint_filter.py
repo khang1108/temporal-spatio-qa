@@ -91,6 +91,24 @@ class ConstraintFilter:
 
         return extracted
 
+    def get_coords(self, entity: Optional[str]) -> Optional[Tuple[float, float]]:
+        """Retrieves coordinates for an entity from metadata."""
+        if not entity:
+            return None
+        clean = entity.strip().rstrip(",").strip()
+        if clean in self.entity_meta and "coords" in self.entity_meta[clean]:
+            return tuple(self.entity_meta[clean]["coords"])
+        return None
+
+    def get_interval(self, entity: Optional[str]) -> Optional[Tuple[int, int]]:
+        """Retrieves temporal interval for an entity from metadata."""
+        if not entity:
+            return None
+        clean = entity.strip().rstrip(",").strip()
+        if clean in self.entity_meta and "interval" in self.entity_meta[clean]:
+            return tuple(self.entity_meta[clean]["interval"])
+        return None
+
     def filter_and_rerank(self,
                           candidate_entities: List[str],
                           scores: List[float],
@@ -98,11 +116,14 @@ class ConstraintFilter:
                           spatial_clue: Optional[str] = None,
                           temporal_clue: Optional[str] = None) -> List[str]:
         """
-        Executes the full 4-step Answer Filtering pipeline:
+        Executes the neuro-symbolic Answer Filtering pipeline:
           Step 1: Parse and classify constraints from question text
           Step 2: Retrieve spatial/temporal reference metadata for clues
-          Step 3: Test each candidate against active constraints
-          Step 4: Re-rank candidates, prioritizing compliant answers
+          Step 3: Test each candidate against active constraints (3-tier: satisfying, neutral, violating)
+          Step 4: Re-rank candidates:
+                  - Verified compliant entities boosted to the front
+                  - Unverified/neutral entities retain relative neural ranking
+                  - Proven violating entities demoted to the back
         """
 
         # =====================================================================
@@ -116,23 +137,22 @@ class ConstraintFilter:
         # =====================================================================
         # STEP 2: Retrieve reference metadata (coordinates & intervals) for clues
         # =====================================================================
-        # Coordinates of the spatial clue (e.g. Munich -> <48.14, 11.58>)
-        clue_coords = self.entity_meta.get(spatial_clue, {}).get("coords") if spatial_clue else None
-        # Interval of the temporal clue (e.g. World War II -> [1939, 1945])
-        clue_interval = self.entity_meta.get(temporal_clue, {}).get("interval") if temporal_clue else None
+        clue_coords = self.get_coords(spatial_clue)
+        clue_interval = self.get_interval(temporal_clue)
 
         satisfying = []
+        neutral = []
         violating = []
 
         # =====================================================================
         # STEP 3: Iterate over candidates and verify constraint satisfaction
         # =====================================================================
         for cand, score in zip(candidate_entities, scores):
-            cand_meta = self.entity_meta.get(cand, {})
-            cand_coords = cand_meta.get("coords")
-            cand_interval = cand_meta.get("interval")
+            cand_coords = self.get_coords(cand)
+            cand_interval = self.get_interval(cand)
 
-            passes = True
+            is_violating = False
+            has_positive_verification = False
 
             # -----------------------------------------------------------------
             # Step 3.1: Check Distance Constraint (DC)
@@ -141,22 +161,20 @@ class ConstraintFilter:
             if geo_dist is not None and clue_coords:
                 if cand_coords:
                     if not satisfies_distance_constraint(cand_coords, clue_coords, geo_dist):
-                        passes = False
-                elif self.entity_meta:
-                    # Entity lacks coordinate data required for distance validation
-                    passes = False
+                        is_violating = True
+                    else:
+                        has_positive_verification = True
 
             # -----------------------------------------------------------------
             # Step 3.2: Check Directional Constraint (DDC / SDC)
             # Strictly checks latitude and/or longitude inequalities
-            # (Per paper: equality on coordinate dimension fails requirement)
             # -----------------------------------------------------------------
-            if passes and geo_dir and clue_coords:
+            if not is_violating and geo_dir and clue_coords:
                 if cand_coords:
                     if not satisfies_direction_constraint(cand_coords, clue_coords, geo_dir):
-                        passes = False
-                elif self.entity_meta:
-                    passes = False
+                        is_violating = True
+                    else:
+                        has_positive_verification = True
 
             # -----------------------------------------------------------------
             # Step 3.3: Check Temporal Constraint (DTC / STC)
@@ -164,29 +182,33 @@ class ConstraintFilter:
             # - STC ('before'): end_cand < start_clue (strictly earlier)
             # - STC ('after'):  start_cand > end_clue (strictly later)
             # -----------------------------------------------------------------
-            if passes and temp_c and clue_interval:
+            if not is_violating and temp_c and clue_interval:
                 if cand_interval:
                     if not satisfies_temporal_constraint(cand_interval, clue_interval, temp_c):
-                        passes = False
-                elif self.entity_meta:
-                    passes = False
+                        is_violating = True
+                    else:
+                        has_positive_verification = True
 
             # -----------------------------------------------------------------
-            # Step 3.4: Place into corresponding bucket
+            # Step 3.4: Place into 3-tier bucket
             # -----------------------------------------------------------------
-            if passes:
+            if is_violating:
+                violating.append((cand, score))
+            elif has_positive_verification:
                 satisfying.append((cand, score))
             else:
-                violating.append((cand, score))
+                neutral.append((cand, score))
 
         # =====================================================================
         # STEP 4: Re-rank and recombine candidate list
-        # Satisfying entities preserve their relative neural scores and appear first.
-        # Violating entities are demoted to the back of the queue.
+        # 1. Verified satisfying entities appear first (ordered by neural score)
+        # 2. Unverified neutral entities appear next (preserving neural score)
+        # 3. Explicitly violating entities demoted to the back of the queue
         # =====================================================================
         satisfying.sort(key=lambda x: x[1], reverse=True)
+        neutral.sort(key=lambda x: x[1], reverse=True)
         violating.sort(key=lambda x: x[1], reverse=True)
 
-        reranked_cands = [c for c, _ in satisfying] + [c for c, _ in violating]
+        reranked_cands = [c for c, _ in satisfying] + [c for c, _ in neutral] + [c for c, _ in violating]
         return reranked_cands
 

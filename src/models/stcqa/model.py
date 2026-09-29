@@ -151,15 +151,7 @@ class STCQAModel(nn.Module):
         forward_scores = self.st_embeddings.score_fact(c_re, c_im, r_re, r_im, t_re, t_im, l_re, l_im)
 
         # Reverse score: phi_ST(e, W_E q, e_c, v_t, v_l)
-        # Complex product of r, t, l:
-        rt_re, rt_im = complex_mul(r_re, r_im, t_re, t_im)
-        rtl_re, rtl_im = complex_mul(rt_re, rt_im, l_re, l_im)
-        # rtl * conj(e_c)
-        c_rtl_re, c_rtl_im = complex_mul(c_re, -c_im, rtl_re, rtl_im)
-        # Inner product with candidate entities
-        all_e_re = self.st_embeddings.ent_re.weight
-        all_e_im = self.st_embeddings.ent_im.weight
-        reverse_scores = torch.matmul(c_rtl_re, all_e_re.t()) + torch.matmul(c_rtl_im, all_e_im.t())
+        reverse_scores = self.st_embeddings.score_reverse_fact(c_re, c_im, r_re, r_im, t_re, t_im, l_re, l_im)
 
         # Bidirectional max
         final_scores = torch.maximum(forward_scores, reverse_scores)

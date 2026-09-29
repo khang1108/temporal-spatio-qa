@@ -67,8 +67,8 @@ def extract_clue_triplet(raw_items, entity2id, time2id, coord2id, entity_meta, d
         ents = item.get("entities", [])
         q_text = item.get("question", "")
 
-        # STEP 1: Determine functional entity roles
-        central, time_clue, loc_clue = classify_question_clues(q_text, ents)
+        # STEP 1: Determine functional entity roles using text-extracted entities
+        central, time_clue, loc_clue = classify_question_clues(q_text, ents, entity_vocab=entity2id)
 
         # STEP 2: Central entity vocabulary ID lookup
         c_clean = clean_entity(central) if central else None
@@ -110,7 +110,7 @@ def evaluate(model, dataloader, id2entity, entity2id, time2id, coord2id, entity_
     Evaluates STCQA on STQAD benchmark:
       - STEP 1: Batched multi-modal clue extraction (Question + Subject + Time + Space).
       - STEP 2: Forward pass through STCQA Fusion Network to score all candidate entities.
-      - STEP 3: Retrieve top candidate pool (top-25).
+      - STEP 3: Retrieve top candidate pool (top-50 for wide recall window).
       - STEP 4: Apply Answer Filtering Module (Section 3.5) to enforce spatio-temporal constraints.
       - STEP 5: Compute Hits@1 and Hits@10 across question categories (DC, DTC, DDC, SDC, STC).
     """
@@ -128,9 +128,9 @@ def evaluate(model, dataloader, id2entity, entity2id, time2id, coord2id, entity_
             # STEP 1: Clue triplet tensor extraction using canonical vocabularies
             c_ids, t_ids, l_ids = extract_clue_triplet(raw_items, entity2id, time2id, coord2id, entity_meta, device)
 
-            # STEP 2 & 3: Model scoring and candidate pool retrieval (top-25)
+            # STEP 2 & 3: Model scoring and candidate pool retrieval (top-50)
             topk_indices, topk_scores = model.predict_topk(
-                input_ids, attention_mask, c_ids, t_ids, l_ids, cls_rep=cls_rep, k=25
+                input_ids, attention_mask, c_ids, t_ids, l_ids, cls_rep=cls_rep, k=50
             )
 
             topk_indices = topk_indices.cpu().tolist()
@@ -142,7 +142,7 @@ def evaluate(model, dataloader, id2entity, entity2id, time2id, coord2id, entity_
                 q_text = item.get("question", "")
 
                 ents = item.get("entities", [])
-                _, t_clue, s_clue = classify_question_clues(q_text, ents)
+                _, t_clue, s_clue = classify_question_clues(q_text, ents, entity_vocab=entity2id)
                 t_clue = clean_entity(t_clue) if t_clue else None
                 s_clue = clean_entity(s_clue) if s_clue else None
 

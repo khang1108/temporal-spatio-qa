@@ -76,3 +76,24 @@ class STComplExEmbedding(nn.Module):
 
         scores = torch.matmul(h_re, all_e_re.t()) + torch.matmul(h_im, all_e_im.t())
         return scores
+
+    def score_reverse_fact(self, o_re, o_im, r_re, r_im, t_re, t_im, l_re, l_im):
+        """
+        Computes phi_ST score when scoring candidate subject entities against a given object:
+        phi_ST(e_cand, r, e_obj, t, l) = Re(<e_cand, r * t * l, conj(e_obj)>)
+        Returns: logits of shape (batch_size, num_entities)
+        """
+        # Complex product of relation, timestamp, location: rtl = r * t * l
+        rt_re, rt_im = complex_mul(r_re, r_im, t_re, t_im)
+        rtl_re, rtl_im = complex_mul(rt_re, rt_im, l_re, l_im)
+
+        # conj(e_obj) * rtl
+        o_rtl_re, o_rtl_im = complex_mul(o_re, -o_im, rtl_re, rtl_im)
+
+        # Candidate entities are subjects: s * (conj(o) * rtl)
+        # Re((s_re + i*s_im) * (u + i*v)) = s_re * u - s_im * v
+        all_e_re = self.ent_re.weight  # (num_entities, D)
+        all_e_im = self.ent_im.weight  # (num_entities, D)
+
+        scores = torch.matmul(o_rtl_re, all_e_re.t()) - torch.matmul(o_rtl_im, all_e_im.t())
+        return scores
