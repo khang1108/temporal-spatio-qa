@@ -21,40 +21,48 @@ This repository implements the 3 primary models from the paper:
 ```
 Spatial-Temporal-KG/
 ├── data/
-│   ├── stqad/
-│   │   ├── train_datas.json          # 8,505 training questions
-│   │   ├── val_datas.json            # 1,063 validation questions
-│   │   ├── test_datas.json           # 1,063 test questions
-│   │   ├── entity2id.json            # 5,897 unique entities
-│   │   └── relation2id.json          # 11 relation types
-│   └── cached_embeddings/            # Precomputed RoBERTa [CLS] vectors for CPU acceleration
+│   ├── stqad/                   # 10,631 QA pairs (train/val/test) & entity/relation dicts
+│   │   ├── train_datas.json     # 8,505 training questions
+│   │   ├── val_datas.json       # 1,063 validation questions
+│   │   ├── test_datas.json      # 1,063 test questions
+│   │   ├── entity2id.json       # 5,897 unique entities
+│   │   └── relation2id.json     # 11 relation types
+│   ├── raw_yago15k/             # Raw YAGO3-15k quadruplet facts
+│   ├── stkg/                    # Constructed STKG per Section 4.1
+│   │   ├── facts.tsv            # 138,056 quadruplets (s, r, o, ts, te, loc)
+│   │   ├── entity_metadata.json # Geo coordinates & temporal lifespan (100% QA coverage)
+│   │   └── stats.json           # STKG graph statistics
+│   └── cached_embeddings/       # Precomputed RoBERTa [CLS] vectors for CPU acceleration
 ├── src/
-│   ├── checkpoint_utils.py          # Auto-download and verification for .pt weights
-│   ├── dataset.py                   # PyTorch Dataset & DataLoader
-│   ├── evaluation.py                # Hits@1, Hits@3, Hits@10 with constraint breakdown
-│   ├── utils_geo.py                 # Haversine distance and direction checking
-│   └── utils_time.py                # Interval and timestamp comparison logic
+│   ├── data/
+│   │   ├── dataset.py           # PyTorch Dataset & DataLoader
+│   │   ├── construct_stkg.py    # Section 4.1 STKG extraction & Wikipedia API geo-resolution
+│   │   └── precompute.py        # Offline RoBERTa [CLS] embedding cache script
+│   ├── evaluation/
+│   │   ├── metrics.py           # Hits@1, Hits@3, Hits@10 with constraint breakdown
+│   │   ├── benchmark.py         # Table 5 comparative aggregator & markdown reporter
+│   │   └── analyze_failures.py  # Error inspection and diagnostic report generator
+│   └── utils/
+│       ├── geo.py               # Haversine distance and directional calculations
+│       ├── time.py              # Interval and timestamp comparison logic
+│       ├── checkpoint.py        # Auto-download and verification for .pt weights
+│       └── download_checkpoints.py # Standalone CLI tool to download .pt checkpoints
 ├── baselines/
-│   ├── roberta/                     # RoBERTa-base PLM baseline
+│   ├── roberta/                 # RoBERTa-base PLM baseline
 │   │   ├── model.py
 │   │   └── run.py
-│   ├── multiqa/                     # MultiQA Temporal baseline
+│   ├── multiqa/                 # MultiQA Temporal baseline
 │   │   ├── model.py
 │   │   └── run.py
-│   └── stcqa/                       # STCQA Proposed Method
-│   │   ├── st_embedding.py          # ST-TComplEx formulation
-│   │   ├── model.py                 # Transformer Fusion & Bidirectional Scoring
-│   │   ├── constraint_filter.py     # Deterministic Answer Filtering
-│   │   └── run.py
+│   └── stcqa/                   # STCQA Proposed Method
+│       ├── st_embedding.py      # ST-TComplEx formulation
+│       ├── model.py             # Transformer Fusion & Bidirectional Scoring
+│       ├── constraint_filter.py # Deterministic Spatio-Temporal Answer Filtering
+│       └── run.py
 ├── experiments/
-│   ├── checkpoints/                 # Model checkpoint weights (.pt files)
-│   ├── predictions/                 # Output prediction JSON files
-│   └── benchmark_report.md          # Generated Table 5 comparative report
-├── scripts/
-│   ├── benchmark.py                 # Aggregates and formats comparative benchmark
-│   ├── download_checkpoints.py      # Standalone CLI tool to download .pt checkpoints
-│   ├── precompute_embeddings.py     # Offline LM embedding cache script
-│   └── analyze_failures.py          # Failure analysis and error inspection tool
+│   ├── checkpoints/             # Model checkpoint weights (.pt files)
+│   ├── predictions/             # Output prediction JSON files
+│   └── benchmark_report.md      # Generated Table 5 comparative report
 ├── requirements.txt
 └── README.md
 ```
@@ -74,13 +82,13 @@ When evaluating models or calling `load_model()` / `model.load_checkpoint()`:
 You can also pre-download all weights in batch using the standalone CLI script:
 ```bash
 # Download all model weights
-python scripts/download_checkpoints.py --model all
+python -m src.utils.download_checkpoints --model all
 
 # Download a specific model weight
-python scripts/download_checkpoints.py --model stcqa
+python -m src.utils.download_checkpoints --model stcqa
 
 # Download with a custom URL
-python scripts/download_checkpoints.py --model stcqa --url <CUSTOM_URL>
+python -m src.utils.download_checkpoints --model stcqa --url <CUSTOM_URL>
 ```
 
 ---
@@ -130,7 +138,7 @@ Tip for quick debugging: Add `--max_samples 50 --epochs 1` to test the pipeline 
 
 ### 4. Generate Comparative Benchmark Table (Table 5)
 ```bash
-python scripts/benchmark.py
+python -m src.evaluation.benchmark
 ```
 Outputs the markdown report comparing all reproduced models against paper reference scores across:
 - **DTC:** Double Timestamp Constraints (`during`, `while`)
@@ -145,7 +153,7 @@ Outputs the markdown report comparing all reproduced models against paper refere
 
 To test a new architecture or variation (e.g. rotary embeddings, LLM verifier):
 1. Create a new folder under `baselines/my_mutation/`.
-2. Reuse `src.dataset.STQADataset` and `src.dataset.get_vocabularies` for data loading.
+2. Reuse `src.data.STQADataset` and `src.data.get_vocabularies` for data loading.
 3. Call `src.evaluation.evaluate_benchmark(predictions, dataset_items)` to compute metrics.
 4. Save your predictions to `experiments/predictions/my_mutation_test_preds.json`.
-5. Run `python scripts/benchmark.py` to see your new method added to the leaderboard.
+5. Run `python -m src.evaluation.benchmark` to see your new method added to the leaderboard.

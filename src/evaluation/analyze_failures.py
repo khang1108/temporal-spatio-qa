@@ -7,9 +7,9 @@ Inspects prediction files (experiments/predictions/*_test_preds.json) to analyze
 3. Export detailed markdown diagnostic report.
 
 Usage:
-    python scripts/analyze_failures.py --model stcqa
-    python scripts/analyze_failures.py --model stcqa --constraint DC --limit 5
-    python scripts/analyze_failures.py --model multiqa --export_report
+    python -m src.evaluation.analyze_failures --model stcqa
+    python -m src.evaluation.analyze_failures --model stcqa --constraint DC --limit 5
+    python -m src.evaluation.analyze_failures --model multiqa --export_report
 """
 
 import os
