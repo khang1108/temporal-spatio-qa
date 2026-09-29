@@ -269,7 +269,7 @@ def main():
     direct_coords = fetch_wikipedia_coordinates(geo_list, batch_size=50)
     print(f"  Direct coordinates resolved from Wikipedia: {len(direct_coords):,}", flush=True)
 
-    # Hierarchical multi-hop fallback via <isLocatedIn>
+    # Hierarchical inheritance via <isLocatedIn> per Section 4.1
     resolved_coords = dict(direct_coords)
     inherited_count = 0
     for e in geo_list:
@@ -285,68 +285,7 @@ def main():
                 if not curr:
                     break
 
-    # Stem-based city matching for clubs (e.g. <Manchester_City_F.C.> -> <Manchester>)
-    stem_resolved = 0
-    for e in geo_list:
-        if e not in resolved_coords:
-            clean = e.strip("<>")
-            # Match city name before common club suffixes
-            stem = re.sub(
-                r"_(F\.C\.|A\.F\.C\.|CF|United_F\.C\.|City_F\.C\.|Rovers_F\.C\.|County_F\.C\.|Town_F\.C\.|Wanderers_F\.C\.)",
-                "", clean
-            )
-            candidate = f"<{stem}>"
-            if candidate in resolved_coords:
-                resolved_coords[e] = resolved_coords[candidate]
-                stem_resolved += 1
-
-    # Well-known fallback coordinates for historic states and London clubs
-    manual_coords = {
-        "<Kazakhstan>": (48.0196, 66.9237),
-        "<Mongolia>": (46.8625, 103.8467),
-        "<Democratic_Republic_of_the_Congo>": (-4.0383, 21.7587),
-        "<Republic_of_the_Congo>": (-0.2280, 15.8277),
-        "<Soviet_Union>": (61.5240, 105.3188),
-        "<West_Germany>": (50.7374, 7.0982),
-        "<Ottoman_Empire>": (41.0082, 28.9784),
-        "<Kingdom_of_Italy>": (41.9028, 12.4964),
-        "<Kingdom_of_Prussia>": (52.5200, 13.4050),
-        "<Kingdom_of_the_Netherlands>": (52.3676, 4.9041),
-        "<AFC_Wimbledon>": (51.4311, -0.1883),
-        "<Wimbledon_F.C.>": (51.4311, -0.1883),
-        "<Barnet_F.C.>": (51.5992, -0.2981),
-        "<Brentford_F.C.>": (51.4889, -0.3014),
-        "<Charlton_Athletic_F.C.>": (51.4864, 0.0361),
-        "<Fulham_F.C.>": (51.4749, -0.2217),
-        "<Tottenham_Hotspur_F.C.>": (51.6042, -0.0664),
-        "<West_Ham_United_F.C.>": (51.5388, -0.0166),
-        "<Wycombe_Wanderers_F.C.>": (51.6287, -0.7482),
-        "<Aston_Villa_F.C.>": (52.5092, -1.8847),
-        "<Arminia_Bielefeld>": (52.0302, 8.5168),
-        "<Derby_County_F.C.>": (52.9150, -1.4472),
-        "<Reading_F.C.>": (51.4222, -0.9828),
-        "<Stoke_City_F.C.>": (52.9883, -2.1756),
-        "<Sunderland_A.F.C.>": (54.9144, -1.3883),
-        "<West_Bromwich_Albion_F.C.>": (52.5091, -1.9639),
-        "<Wigan_Athletic_F.C.>": (53.5478, -2.6542),
-        "<Ayr_United_F.C.>": (55.4597, -4.6192),
-        "<Hibernian_F.C.>": (55.9617, -3.1656),
-        "<CFR_Cluj>": (46.7797, 23.5786),
-        "<FC_Twente>": (52.2366, 6.8378),
-        "<FK_Vojvodina>": (45.2444, 19.8458),
-        "<Monarcas_Morelia>": (19.7214, -101.2333),
-        "<Morocco_national_football_team>": (33.9716, -6.8498),
-        "<Northwich_Victoria_F.C.>": (53.2592, -2.5161),
-        "<S.C._Olhanense>": (37.0278, -7.8394),
-        "<Villarreal_CF>": (39.9442, -0.1039),
-        "<Quebec_City>": (46.8139, -71.2080),
-    }
-    for e, coords in manual_coords.items():
-        if e not in resolved_coords:
-            resolved_coords[e] = coords
-
     print(f"  Inherited coordinates via <isLocatedIn>: {inherited_count:,}", flush=True)
-    print(f"  Resolved coordinates via club stem matching: {stem_resolved:,}", flush=True)
     print(f"  Total entities with coordinates: {len(resolved_coords):,}", flush=True)
 
     # -------------------------------------------------------------------------
