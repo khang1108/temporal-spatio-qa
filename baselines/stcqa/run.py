@@ -90,7 +90,12 @@ def evaluate(model, dataloader, id2entity, entity2id, dataset_items, device, k=1
       - STEP 5: Compute Hits@1 and Hits@10 across question categories (DC, DTC, DDC, SDC, STC).
     """
     model.eval()
-    filter_module = ConstraintFilter()
+    meta_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data", "stkg", "entity_metadata.json")
+    entity_meta = {}
+    if os.path.exists(meta_path):
+        with open(meta_path, "r", encoding="utf-8") as f:
+            entity_meta = json.load(f)
+    filter_module = ConstraintFilter(entity_meta=entity_meta)
     all_predictions = []
 
     with torch.no_grad():

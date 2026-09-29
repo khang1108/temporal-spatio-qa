@@ -1,0 +1,11 @@
+{
+  "total_facts": 138056,
+  "facts_spatio_temporal": 90988,
+  "unique_entities": 15403,
+  "unique_relations": 32,
+  "entities_with_coords": 1471,
+  "entities_with_intervals": 4197,
+  "stqad_spatial_clue_coverage_pct": 99.9,
+  "stqad_answer_coverage_pct": 100.0,
+  "stqad_time_coverage_pct": 11.06
+}
