@@ -19,9 +19,9 @@ class STCQAModel(nn.Module):
     def __init__(self,
                  model_name: str = "roberta-base",
                  num_entities: int = 5897,
-                 num_relations: int = 20,
-                 num_timestamps: int = 600,
-                 num_locations: int = 2500,
+                 num_relations: int = 32,
+                 num_timestamps: int = 170,
+                 num_locations: int = 1352,
                  embedding_dim: int = 512,
                  num_transformer_layers: int = 2,
                  nhead: int = 4,
@@ -182,6 +182,38 @@ class STCQAModel(nn.Module):
         topk_scores, topk_indices = torch.topk(logits, k=k, dim=-1)
         return topk_indices, topk_scores
 
+    def load_pretrained_stkg(self, checkpoint_path: str, freeze: bool = True):
+        """
+        Loads pre-trained ST-TComplEx embeddings from STKG link prediction stage (Section 5.3 & Appendix B).
+        Optionally freezes the embeddings during QA fine-tuning.
+        """
+        ckpt = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+        sd = ckpt["state_dict"] if "state_dict" in ckpt else ckpt
+
+        with torch.no_grad():
+            n_ent = min(self.st_embeddings.num_entities, sd["ent_re.weight"].size(0))
+            self.st_embeddings.ent_re.weight[:n_ent].copy_(sd["ent_re.weight"][:n_ent])
+            self.st_embeddings.ent_im.weight[:n_ent].copy_(sd["ent_im.weight"][:n_ent])
+
+            n_rel = min(self.st_embeddings.num_relations, sd["rel_re.weight"].size(0))
+            self.st_embeddings.rel_re.weight[:n_rel].copy_(sd["rel_re.weight"][:n_rel])
+            self.st_embeddings.rel_im.weight[:n_rel].copy_(sd["rel_im.weight"][:n_rel])
+
+            n_time = min(self.st_embeddings.num_timestamps, sd["time_re.weight"].size(0))
+            self.st_embeddings.time_re.weight[:n_time].copy_(sd["time_re.weight"][:n_time])
+            self.st_embeddings.time_im.weight[:n_time].copy_(sd["time_im.weight"][:n_time])
+
+            n_loc = min(self.st_embeddings.num_locations, sd["loc_re.weight"].size(0))
+            self.st_embeddings.loc_re.weight[:n_loc].copy_(sd["loc_re.weight"][:n_loc])
+            self.st_embeddings.loc_im.weight[:n_loc].copy_(sd["loc_im.weight"][:n_loc])
+
+        if freeze:
+            for param in self.st_embeddings.parameters():
+                param.requires_grad = False
+            print(f"[STCQA] Loaded and FROZEN pre-trained STKG embeddings from {checkpoint_path}")
+        else:
+            print(f"[STCQA] Loaded pre-trained STKG embeddings from {checkpoint_path} (trainable)")
+
     def load_checkpoint(self,
                         checkpoint_path: Optional[str] = None,
                         url: Optional[str] = None,
@@ -199,4 +231,5 @@ class STCQAModel(nn.Module):
             device=device,
             force_download=force_download
         )
+
 

@@ -11,6 +11,9 @@ from src.data.dataset import (
     classify_question_clues,
 )
 
+from src.data.build_vocab import build_stkg_vocabularies
+from src.data.pretrain_stkg import pretrain_stkg
+
 __all__ = [
     "load_stqad",
     "get_vocabularies",
@@ -18,4 +21,6 @@ __all__ = [
     "collate_stqad_fn",
     "clean_entity",
     "classify_question_clues",
+    "build_stkg_vocabularies",
+    "pretrain_stkg",
 ]

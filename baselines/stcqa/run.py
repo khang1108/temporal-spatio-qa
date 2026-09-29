@@ -29,8 +29,15 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Train and evaluate STCQA on STQAD")
     parser.add_argument("--model_name", type=str, default="roberta-base")
     parser.add_argument("--data_dir", type=str, default="data/stqad")
+    parser.add_argument("--stkg_dir", type=str, default="data/stkg")
     parser.add_argument("--output_dir", type=str, default="experiments/checkpoints/stcqa")
     parser.add_argument("--pred_dir", type=str, default="experiments/predictions")
+    parser.add_argument("--pretrained_stkg", type=str, default="experiments/checkpoints/stkg/stkg_pretrained_50ep.pt",
+                        help="Path to pre-trained STKG ST-TComplEx weights")
+    parser.add_argument("--freeze_kg", action="store_true", default=True,
+                        help="Freeze STKG embeddings during QA fine-tuning per Appendix B")
+    parser.add_argument("--no_freeze_kg", dest="freeze_kg", action="store_false",
+                        help="Allow fine-tuning of STKG embeddings")
     parser.add_argument("--epochs", type=int, default=60, help="Number of training epochs (paper: 60)")
     parser.add_argument("--batch_size", type=int, default=150, help="Training batch size (paper: 150)")
     parser.add_argument("--lr", type=float, default=2e-5, help="Learning rate (paper: 2e-5)")
@@ -43,13 +50,13 @@ def parse_args():
     return parser.parse_args()
 
 
-def extract_clue_triplet(raw_items, entity2id, device):
+def extract_clue_triplet(raw_items, entity2id, time2id, coord2id, entity_meta, device):
     """
-    Extracts clue triplet (Central Entity, Temporal Clue, Spatial Clue) for STCQA:
+    Extracts clue triplet (Central Entity, Temporal Clue, Spatial Clue) for STCQA per Section 5.2 & 5.3:
       - STEP 1: Disentangle entities into roles via constraint-aware keyword matching (Section 5.2).
-      - STEP 2: Map Central Subject [ENT] to global KG entity ID.
-      - STEP 3: Map Temporal Clue [TS] to time bucket ID (modulo 600).
-      - STEP 4: Map Spatial Clue [GEO] to spatial grid bucket ID (modulo 2500).
+      - STEP 2: Map Central Subject [ENT] to STKG entity ID.
+      - STEP 3: Map Temporal Clue [TS] to canonical time ID from entity_metadata / time2id (0 for <NONE>).
+      - STEP 4: Map Spatial Clue [GEO] to canonical coord ID from entity_metadata / coord2id (0 for <NONE>).
       - STEP 5: Collate into PyTorch tensors on the target device.
     """
     central_ids = []
@@ -64,11 +71,29 @@ def extract_clue_triplet(raw_items, entity2id, device):
         central, time_clue, loc_clue = classify_question_clues(q_text, ents)
 
         # STEP 2: Central entity vocabulary ID lookup
-        c_id = entity2id.get(clean_entity(central), -1) if central else -1
+        c_clean = clean_entity(central) if central else None
+        c_id = entity2id.get(c_clean, -1) if c_clean else -1
 
-        # STEP 3 & 4: Bucket hashing for temporal and spatial clue representations
-        t_id = (abs(hash(clean_entity(time_clue))) % 600) if time_clue else -1
-        l_id = (abs(hash(clean_entity(loc_clue))) % 2500) if loc_clue else -1
+        # STEP 3: Map Temporal Clue [TS] to canonical time ID from entity_metadata or time2id
+        t_clean = clean_entity(time_clue) if time_clue else None
+        t_id = 0
+        if t_clean:
+            if t_clean in entity_meta and entity_meta[t_clean].get("interval"):
+                year_str = str(entity_meta[t_clean]["interval"][0])
+                t_id = time2id.get(year_str, 0)
+            elif t_clean in time2id:
+                t_id = time2id[t_clean]
+
+        # STEP 4: Map Spatial Clue [GEO] to canonical coord ID from entity_metadata or coord2id
+        l_clean = clean_entity(loc_clue) if loc_clue else None
+        l_id = 0
+        if l_clean:
+            if l_clean in entity_meta and entity_meta[l_clean].get("coords"):
+                lat, lon = entity_meta[l_clean]["coords"]
+                coord_key = f"{lat:.4f},{lon:.4f}"
+                l_id = coord2id.get(coord_key, 0)
+            elif l_clean in coord2id:
+                l_id = coord2id[l_clean]
 
         central_ids.append(c_id)
         time_ids.append(t_id)
@@ -80,7 +105,7 @@ def extract_clue_triplet(raw_items, entity2id, device):
             torch.tensor(loc_ids, dtype=torch.long, device=device))
 
 
-def evaluate(model, dataloader, id2entity, entity2id, dataset_items, device, k=10, return_details=False):
+def evaluate(model, dataloader, id2entity, entity2id, time2id, coord2id, entity_meta, dataset_items, device, k=10, return_details=False):
     """
     Evaluates STCQA on STQAD benchmark:
       - STEP 1: Batched multi-modal clue extraction (Question + Subject + Time + Space).
@@ -90,11 +115,6 @@ def evaluate(model, dataloader, id2entity, entity2id, dataset_items, device, k=1
       - STEP 5: Compute Hits@1 and Hits@10 across question categories (DC, DTC, DDC, SDC, STC).
     """
     model.eval()
-    meta_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data", "stkg", "entity_metadata.json")
-    entity_meta = {}
-    if os.path.exists(meta_path):
-        with open(meta_path, "r", encoding="utf-8") as f:
-            entity_meta = json.load(f)
     filter_module = ConstraintFilter(entity_meta=entity_meta)
     all_predictions = []
 
@@ -105,8 +125,8 @@ def evaluate(model, dataloader, id2entity, entity2id, dataset_items, device, k=1
             attention_mask = batch["attention_mask"].to(device) if batch.get("attention_mask") is not None else None
             raw_items = batch["raw_items"]
 
-            # STEP 1: Clue triplet tensor extraction
-            c_ids, t_ids, l_ids = extract_clue_triplet(raw_items, entity2id, device)
+            # STEP 1: Clue triplet tensor extraction using canonical vocabularies
+            c_ids, t_ids, l_ids = extract_clue_triplet(raw_items, entity2id, time2id, coord2id, entity_meta, device)
 
             # STEP 2 & 3: Model scoring and candidate pool retrieval (top-25)
             topk_indices, topk_scores = model.predict_topk(
@@ -169,6 +189,26 @@ def main():
     entity2id, id2entity, relation2id, id2relation = get_vocabularies(args.data_dir)
     num_entities = len(entity2id)
 
+    # Load canonical STKG vocabularies (timestamps, coordinates) & metadata
+    time_vocab_path = os.path.join(args.stkg_dir, "time2id.json")
+    coord_vocab_path = os.path.join(args.stkg_dir, "coord2id.json")
+    meta_path = os.path.join(args.stkg_dir, "entity_metadata.json")
+
+    time2id = {}
+    if os.path.exists(time_vocab_path):
+        with open(time_vocab_path, "r", encoding="utf-8") as f:
+            time2id = json.load(f)
+
+    coord2id = {}
+    if os.path.exists(coord_vocab_path):
+        with open(coord_vocab_path, "r", encoding="utf-8") as f:
+            coord2id = json.load(f)
+
+    entity_meta = {}
+    if os.path.exists(meta_path):
+        with open(meta_path, "r", encoding="utf-8") as f:
+            entity_meta = json.load(f)
+
     # =========================================================================
     # STEP 4: Load Dataset Splits (Train, Validation, Test)
     # =========================================================================
@@ -214,19 +254,23 @@ def main():
     # Components:
     #   - Text Encoder: RoBERTa-base (768-d text representations)
     #   - Entity Embedding Table: [num_entities, 512]
-    #   - Temporal Clue Embedding Table: [600, 512]
-    #   - Spatial Clue Embedding Table: [2500, 512]
+    #   - Temporal Clue Embedding Table: [num_timestamps, 512]
+    #   - Spatial Clue Embedding Table: [num_locations, 512]
     #   - Multi-Modal Fusion: Cross-attention / Transformer fusion layers
     #   - Answer Prediction Head: Linear projection scoring all entities
     model = STCQAModel(
         model_name=args.model_name,
         num_entities=num_entities,
         num_relations=len(relation2id) + 5,
-        num_timestamps=600,
-        num_locations=2500,
+        num_timestamps=max(1, len(time2id)),
+        num_locations=max(1, len(coord2id)),
         embedding_dim=args.embedding_dim,
         freeze_encoder=args.freeze_encoder
     ).to(device)
+
+    # Load and optionally freeze pre-trained STKG embeddings per Appendix B
+    if args.pretrained_stkg and os.path.exists(args.pretrained_stkg):
+        model.load_pretrained_stkg(args.pretrained_stkg, freeze=args.freeze_kg)
 
     best_checkpoint = os.path.join(args.output_dir, "best_model.pt")
 
@@ -249,7 +293,7 @@ def main():
                 target_dist = batch["target_dist"].to(device)
 
                 # Extract disentangled clue triplet: Central Subject, Time Clue, Spatial Clue
-                c_ids, t_ids, l_ids = extract_clue_triplet(batch["raw_items"], entity2id, device)
+                c_ids, t_ids, l_ids = extract_clue_triplet(batch["raw_items"], entity2id, time2id, coord2id, entity_meta, device)
 
                 optimizer.zero_grad()
                 logits = model(input_ids, attention_mask, c_ids, t_ids, l_ids, cls_rep=cls_rep)
@@ -262,7 +306,7 @@ def main():
             avg_loss = total_loss / len(train_loader)
 
             # Evaluate on Validation split to track progress
-            val_results, _ = evaluate(model, val_loader, id2entity, entity2id, val_data, device)
+            val_results, _ = evaluate(model, val_loader, id2entity, entity2id, time2id, coord2id, entity_meta, val_data, device)
             val_hits1 = val_results["Overall"]["Hits@1"]
             val_hits10 = val_results["Overall"]["Hits@10"]
 
@@ -286,7 +330,7 @@ def main():
     # STEP 10: Run Final Evaluation on Test Split with Answer Filtering Module
     # =========================================================================
     test_results, test_preds, sample_details, failure_summary = evaluate(
-        model, test_loader, id2entity, entity2id, test_data, device, return_details=True
+        model, test_loader, id2entity, entity2id, time2id, coord2id, entity_meta, test_data, device, return_details=True
     )
 
     # =========================================================================

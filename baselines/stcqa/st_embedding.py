@@ -29,6 +29,9 @@ class STComplExEmbedding(nn.Module):
         super().__init__()
         self.embedding_dim = embedding_dim
         self.num_entities = num_entities
+        self.num_relations = num_relations
+        self.num_timestamps = num_timestamps
+        self.num_locations = num_locations
 
         # Entity complex embeddings
         self.ent_re = nn.Embedding(num_entities, embedding_dim)
