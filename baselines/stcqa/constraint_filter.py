@@ -20,8 +20,8 @@ Theoretical Motivation:
 
 import re
 from typing import List, Dict, Any, Tuple, Optional
-from src.utils_geo import haversine_distance, satisfies_distance_constraint, satisfies_direction_constraint
-from src.utils_time import satisfies_temporal_constraint
+from src.utils.geo import haversine_distance, satisfies_distance_constraint, satisfies_direction_constraint
+from src.utils.time import satisfies_temporal_constraint
 
 
 class ConstraintFilter:

@@ -95,7 +95,7 @@ class RoBERTaBaseline(nn.Module):
         """
         Checks whether .pt file exists; if not, downloads it, then loads weights into model.
         """
-        from src.checkpoint_utils import load_model_checkpoint
+        from src.utils.checkpoint import load_model_checkpoint
         return load_model_checkpoint(
             self,
             model_name="roberta",

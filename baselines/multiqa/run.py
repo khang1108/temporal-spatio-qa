@@ -14,9 +14,9 @@ from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
 from tqdm import tqdm
 
-from src.dataset import load_stqad, get_vocabularies, STQADataset, collate_stqad_fn, clean_entity, classify_question_clues
-from src.evaluation import evaluate_benchmark, format_table5_markdown
-from src.checkpoint_utils import ensure_checkpoint, load_model_checkpoint
+from src.data.dataset import load_stqad, get_vocabularies, STQADataset, collate_stqad_fn, clean_entity, classify_question_clues
+from src.evaluation.metrics import evaluate_benchmark, format_table5_markdown
+from src.utils.checkpoint import ensure_checkpoint, load_model_checkpoint
 from baselines.multiqa.model import MultiQABaseline
 
 
