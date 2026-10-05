@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spatial Intelligence in MLLMs: Master Survey, Limitations & Research Gap Matrix</title>
+  <title>Trí tuệ Không gian trong MLLMs: Khảo cứu Tổng quan, Giới hạn Học thuật & Ma trận Khoảng trống Nghiên cứu</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -627,11 +627,11 @@
     <!-- Header -->
     <header>
       <div class="badge-pill">
-        <span>🔬 Academic Research Survey 2020–2025</span>
+        <span>🔬 Khảo cứu Học thuật Toàn diện 2020–2025</span>
       </div>
-      <h1>Spatial Intelligence in MLLMs</h1>
+      <h1>Trí tuệ Không gian trong MLLMs</h1>
       <p class="subtitle">
-        Visualizing the structural limitations of 25 landmark papers, the depth-injection fallacy, and the unclaimed research gap for the <strong>SpatialMQA (ACL 2025)</strong> benchmark.
+        Trực quan hóa các giới hạn cấu trúc của 25 công trình tiêu biểu, ngụy biện về việc chỉ tiêm Depth (Chiều sâu), và khoảng trống nghiên cứu mở ra cho benchmark <strong>SpatialMQA (ACL 2025)</strong>.
       </p>
     </header>
 
@@ -639,19 +639,19 @@
     <div class="stats-grid">
       <div class="stat-card" style="--card-accent: var(--cyan)">
         <div class="stat-val">25</div>
-        <div class="stat-lbl">Landmark Papers Analyzed</div>
+        <div class="stat-lbl">Bài báo Trọng điểm được Khảo cứu</div>
       </div>
       <div class="stat-card" style="--card-accent: var(--rose)">
         <div class="stat-val">38.2%</div>
-        <div class="stat-lbl">Frame of Reference Errors (FRS)</div>
+        <div class="stat-lbl">Lỗi do Đảo Hệ quy chiếu (FRS)</div>
       </div>
       <div class="stat-card" style="--card-accent: var(--amber)">
         <div class="stat-val">29.6%</div>
-        <div class="stat-lbl">LLaVA-1.5 Depth Accuracy (Ay)</div>
+        <div class="stat-lbl">Độ chính xác Chiều sâu LLaVA (Ay)</div>
       </div>
       <div class="stat-card" style="--card-accent: var(--emerald)">
         <div class="stat-val">T<sub>cam→obj</sub></div>
-        <div class="stat-lbl">Proposed 3D Coordinate Gap</div>
+        <div class="stat-lbl">Ma trận Tọa độ 3D Đề xuất (Novelty)</div>
       </div>
     </div>
 
@@ -659,11 +659,11 @@
     <div class="interactive-dilemma-card">
       <div class="demo-header">
         <div>
-          <span class="demo-tag">The Fundamental Mathematical Proof</span>
-          <h3 class="demo-title" style="margin-top: 0.4rem;">Why Monocular Depth Alone (Depth Anything) CANNOT Solve SpatialMQA</h3>
+          <span class="demo-tag">Chứng minh Toán học Thực nghiệm</span>
+          <h3 class="demo-title" style="margin-top: 0.4rem;">Tại sao chỉ dùng Monocular Depth (Bản đồ Chiều sâu Đơn ảnh) KHÔNG THỂ Giải quyết được SpatialMQA</h3>
         </div>
-        <div style="font-size: 0.85rem; color: var(--text-muted); max-width: 420px;">
-          Adjust the Giraffe's heading direction below. Notice that while <strong>Camera Depth never changes</strong>, the true spatial relation completely inverts!
+        <div style="font-size: 0.85rem; color: var(--text-muted); max-width: 440px;">
+          Kéo thanh trượt để xoay <strong>Heading Direction (Hướng mặt của chú hươu)</strong> bên dưới. Hãy chú ý: <strong>Camera Depth (Khoảng cách từ máy ảnh tới vật) hoàn toàn không đổi</strong>, nhưng quan hệ không gian thực tế trong Hệ quy chiếu Chủ thể bị đảo ngược hoàn toàn!
         </div>
       </div>
 
@@ -678,27 +678,27 @@
             <!-- Camera (Viewer) -->
             <g transform="translate(0, 140)">
               <polygon points="-16,10 16,10 0,-15" fill="#38bdf8"/>
-              <text x="0" y="26" text-anchor="middle" fill="#38bdf8" font-size="11" font-weight="700">CAMERA (Z=0)</text>
+              <text x="0" y="26" text-anchor="middle" fill="#38bdf8" font-size="11" font-weight="700">MÁY ẢNH (CAMERA, Z=0)</text>
               <line x1="0" y1="-15" x2="0" y2="-280" stroke="rgba(56,189,248,0.25)" stroke-dasharray="5"/>
             </g>
 
             <!-- Object A: Giraffe (Center) -->
             <g id="giraffeNode" transform="translate(0, -10)">
               <circle cx="0" cy="0" r="26" fill="#1e293b" stroke="#f59e0b" stroke-width="2.5"/>
-              <text x="0" y="4" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">Giraffe (A)</text>
+              <text x="0" y="4" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">Vật chủ (Hươu A)</text>
               
               <!-- Heading Pointer (Rotated by JS) -->
               <g id="headingArrow">
                 <line x1="0" y1="0" x2="0" y2="-45" stroke="#f43f5e" stroke-width="3.5" marker-end="url(#arrowhead)"/>
                 <circle cx="0" cy="-45" r="4" fill="#f43f5e"/>
-                <text x="0" y="-52" text-anchor="middle" fill="#f43f5e" font-size="10" font-weight="700">Facing Vector (h)</text>
+                <text x="0" y="-52" text-anchor="middle" fill="#f43f5e" font-size="10" font-weight="700">Heading Vector (h)</text>
               </g>
             </g>
 
             <!-- Object B: Sun / Tree -->
             <g transform="translate(100, -80)">
               <circle cx="0" cy="0" r="20" fill="#10b981" fill-opacity="0.2" stroke="#10b981" stroke-width="2"/>
-              <text x="0" y="4" text-anchor="middle" fill="#10b981" font-size="10" font-weight="700">Target (B)</text>
+              <text x="0" y="4" text-anchor="middle" fill="#10b981" font-size="10" font-weight="700">Vật tiêu (Mục tiêu B)</text>
             </g>
 
             <!-- Distance vectors -->
@@ -717,27 +717,27 @@
         <div class="controls-panel">
           <div class="slider-group">
             <label for="rotSlider">
-              <span>Rotate Giraffe Facing Direction (&theta;):</span>
-              <span id="degLabel" style="color: var(--cyan); font-family: 'JetBrains Mono', monospace;">0&deg; (Facing Away)</span>
+              <span>Xoay Góc Hướng mặt của Hươu (&theta; - Heading Angle):</span>
+              <span id="degLabel" style="color: var(--cyan); font-family: 'JetBrains Mono', monospace;">0&deg; (Quay lưng về Camera)</span>
             </label>
             <input type="range" id="rotSlider" min="0" max="360" value="0">
           </div>
 
           <div class="comparison-callout">
             <div class="comp-box camera">
-              <div class="comp-title">Camera-Centric View (Depth Anything)</div>
-              <div class="comp-ans" id="camAns">RIGHT OF</div>
-              <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.25rem;">Z_cam & X_cam strictly static</div>
+              <div class="comp-title">Camera-Centric View (Góc nhìn Máy ảnh / Depth Anything)</div>
+              <div class="comp-ans" id="camAns">RIGHT OF (BÊN PHẢI)</div>
+              <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.25rem;">Z_cam & X_cam cố định không đổi</div>
             </div>
             <div class="comp-box object">
-              <div class="comp-title">Object-Centric View (SpatialMQA Q2)</div>
-              <div class="comp-ans" id="objAns" style="color: var(--rose);">RIGHT OF</div>
-              <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.25rem;">Transforms with Object Heading!</div>
+              <div class="comp-title">Object-Centric View (Góc nhìn Chủ thể / SpatialMQA Q2)</div>
+              <div class="comp-ans" id="objAns" style="color: var(--rose);">RIGHT OF (BÊN PHẢI)</div>
+              <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.25rem;">Biến đổi liên tục theo góc xoay thân thể!</div>
             </div>
           </div>
 
           <div style="background: rgba(255, 255, 255, 0.03); border-left: 3px solid var(--amber); padding: 0.85rem; border-radius: 8px; font-size: 0.85rem; color: var(--text-muted);">
-            <strong style="color: var(--amber);">Key Takeaway:</strong> A monocular depth map only measures distance along the camera optical axis ($Z_{\text{camera}}$). Because it has <strong>zero knowledge of the object's body rotation</strong>, depth injection alone is mathematically blind to Ego-centric questions (Question Type Q2), which accounts for <strong>38.2% of all benchmark errors</strong>.
+            <strong style="color: var(--amber);">Điểm Mấu chốt (Key Takeaway):</strong> Bản đồ độ sâu đơn ảnh (Monocular Depth Map) chỉ đo khoảng cách theo trục quang học của camera ($Z_{\text{camera}}$). Do hoàn toàn <strong>không có thông tin về góc xoay thân thể của vật (Object Heading Vector)</strong>, việc chỉ tiêm Depth vào VLM sẽ hoàn toàn "mù" trước các câu hỏi Góc nhìn Ngôi thứ nhất (Ego-centric / Q2) — vốn là nguyên nhân gây ra <strong>38.2% tổng số lỗi sai</strong> của benchmark!
           </div>
         </div>
       </div>
@@ -746,62 +746,62 @@
     <!-- The 4 Fatal Limitations in Recent Literature -->
     <div class="limitations-section">
       <h2 class="section-title">
-        <span>⚠️ The 4 Fatal Limitations of Existing MLLMs</span>
+        <span>⚠️ 4 Tử huyệt Học thuật (Fatal Limitations) của các MLLM Hiện nay</span>
       </h2>
       <p class="section-desc">
-        Why simply fine-tuning LoRA or concatenating Depth Anything maps leaves models stuck below 50% accuracy:
+        Tại sao việc chỉ đơn thuần fine-tune LoRA hoặc nối thêm bản đồ Depth Anything vẫn khiến các mô hình bị chặn cứng dưới 50% độ chính xác:
       </p>
 
       <div class="limitations-grid">
         <!-- Lim 1 -->
         <div class="lim-card">
           <div class="lim-icon lim-1">🔄</div>
-          <h3 class="lim-title">1. The Frame of Reference (FRS) Dilemma</h3>
-          <div class="lim-stat">Responsible for 38.2% of Spatial Errors</div>
+          <h3 class="lim-title">1. Nghịch lý Hệ quy chiếu (The FRS Dilemma)</h3>
+          <div class="lim-stat">Chiếm 38.2% Tổng số Lỗi sai Không gian</div>
           <p class="lim-desc">
-            Vision encoders (CLIP) natively project scenes onto the 2D sensor array. When questions require ego-centric perspective shifts (<em>"If you were the giraffe..."</em>), the model cannot execute the mental 3D rotation matrix $R$, defaulting lazily to the camera's point of view.
+            Bộ mã hóa thị giác (Vision Encoder CLIP) mặc định chiếu ảnh lên mặt phẳng cảm biến 2D của máy ảnh. Khi câu hỏi đòi hỏi biến đổi góc nhìn chủ quan (Ego-centric Shift - <em>"Nếu bạn là chú hươu trong ảnh..."</em>), mô hình không thể thực hiện phép nhân ma trận quay 3D (Mental Rotation) trong latent space, dẫn đến việc lười biếng đoán mò theo góc nhìn camera.
           </p>
           <div class="lim-victim">
-            <strong>Fails on:</strong> LLaVA-1.5 (40.9% on Q2), Spatial-MLLM (NeurIPS 24), SpatialVLM (CVPR 24).
+            <strong>Bó tay trên:</strong> LLaVA-1.5 (40.9% ở câu hỏi Q2), Spatial-MLLM (NeurIPS 24), SpatialVLM (CVPR 24).
           </div>
         </div>
 
         <!-- Lim 2 -->
         <div class="lim-card">
           <div class="lim-icon lim-2">🧠</div>
-          <h3 class="lim-title">2. Semantic Shortcut Exploitation</h3>
-          <div class="lim-stat">False Confidence in Benchmarks</div>
+          <h3 class="lim-title">2. Bẫy Học vẹt Ngữ nghĩa (Semantic Shortcuts)</h3>
+          <div class="lim-stat">Điểm số Ảo trên các Benchmark Cũ</div>
           <p class="lim-desc">
-            On datasets like SQA3D or ScanQA, MLLMs achieve deceptive scores by memorizing language priors (e.g., <em>"sun is above"</em>, <em>"floor is below"</em>, <em>"larger means closer"</em>). When tested on SpatialMQA without bounding boxes and with non-canonical perspectives, performance drops to coin-flip level.
+            Trên các tập dữ liệu như SQA3D hay ScanQA, MLLM đạt điểm cao nhờ học vẹt các tiên đề ngôn ngữ (Language Priors, ví dụ: <em>"mặt trời luôn ở trên"</em>, <em>"sàn nhà luôn ở dưới"</em>, <em>"vật to hơn thường ở gần hơn"</em>). Khi đưa vào SpatialMQA (nơi không có bounding box và góc nhìn phi quy ước), mô hình lập tức sụp đổ về mức đoán ngẫu nhiên.
           </p>
           <div class="lim-victim">
-            <strong>Fails on:</strong> GPT-4V, Gemini 1.5 Pro, BLIP-2, IDEFICS.
+            <strong>Bó tay trên:</strong> GPT-4V, Gemini 1.5 Pro, BLIP-2, IDEFICS.
           </div>
         </div>
 
         <!-- Lim 3 -->
         <div class="lim-card">
           <div class="lim-icon lim-3">📷</div>
-          <h3 class="lim-title">3. The Sensor Dependency Barrier</h3>
-          <div class="lim-stat">Laboratory vs In-the-Wild Realities</div>
+          <h3 class="lim-title">3. Rào cản Phụ thuộc Cảm biến (Sensor Dependency)</h3>
+          <div class="lim-stat">Phòng Thí nghiệm vs Thực tế Đời thường</div>
           <p class="lim-desc">
-            Many specialized 3D models (PointLLM, 3D-LLM, ScanQA) require dense 3D point clouds or calibrated RGB-D cameras (Matterport / LiDAR). In contrast, real-world web applications and SpatialMQA operate exclusively on uncalibrated, monocular 2D images.
+            Nhiều mô hình 3D chuyên biệt (PointLLM, 3D-LLM, ScanQA) bắt buộc phải có đám mây điểm 3D (Dense 3D Point Clouds) hoặc camera RGB-D có cân chỉnh tọa độ (Matterport / LiDAR). Ngược lại, các ứng dụng web thực tế và SpatialMQA chỉ hoạt động trên ảnh đơn sắc 2D tự nhiên (In-the-wild Monocular 2D Images).
           </p>
           <div class="lim-victim">
-            <strong>Fails on:</strong> PointLLM (ECCV 24), 3D-LLM (NeurIPS 23), Grounded 3D-LLM.
+            <strong>Bó tay trên:</strong> PointLLM (ECCV 24), 3D-LLM (NeurIPS 23), Grounded 3D-LLM.
           </div>
         </div>
 
         <!-- Lim 4 -->
         <div class="lim-card">
           <div class="lim-icon lim-4">⚡</div>
-          <h3 class="lim-title">4. Semantic Alignment Catastrophe</h3>
-          <div class="lim-stat">Catastrophic Forgetting</div>
+          <h3 class="lim-title">4. Thảm họa Căn chỉnh Ngữ nghĩa (Alignment Catastrophe)</h3>
+          <div class="lim-stat">Hiện tượng Quên Tri thức Cũ (Catastrophic Forgetting)</div>
           <p class="lim-desc">
-            Directly injecting 3D position embeddings or early-fusing depth tokens into pre-trained 2D ViT patch tokens corrupts the pre-trained CLIP semantic alignment space, causing severe degradation on open-ended general visual reasoning tasks.
+            Việc nhồi trực tiếp vector nhúng vị trí 3D (3D Positional Embeddings) hoặc ghép thô token độ sâu (Early-fusing Depth Tokens) vào các patch token 2D của ViT sẽ phá vỡ không gian căn chỉnh ngôn ngữ - hình ảnh (Vision-Language Alignment Space) đã được tiền huấn luyện của CLIP, làm suy giảm nghiêm trọng khả năng trả lời VQA tổng quát.
           </p>
           <div class="lim-victim">
-            <strong>Fails on:</strong> LLaVA-3D (2024), early dual-encoder variants.
+            <strong>Bó tay trên:</strong> LLaVA-3D (2024), các biến thể ghép nối Dual-Encoder thời kỳ đầu.
           </div>
         </div>
       </div>
@@ -811,25 +811,25 @@
     <div class="table-container">
       <div class="table-toolbar">
         <div class="filter-pills">
-          <button class="filter-btn active" data-filter="all">All Papers (25)</button>
-          <button class="filter-btn" data-filter="depth">Depth & 3D Injection</button>
-          <button class="filter-btn" data-filter="for">Frame of Reference</button>
-          <button class="filter-btn" data-filter="2d">2D Grounding</button>
-          <button class="filter-btn" data-filter="bench">Benchmarks</button>
+          <button class="filter-btn active" data-filter="all">Tất cả Bài báo (25)</button>
+          <button class="filter-btn" data-filter="depth">Tiêm Chiều sâu & 3D (Depth & 3D)</button>
+          <button class="filter-btn" data-filter="for">Hệ quy chiếu (Frame of Reference)</button>
+          <button class="filter-btn" data-filter="2d">Định vị 2D (2D Grounding)</button>
+          <button class="filter-btn" data-filter="bench">Tập chuẩn (Benchmarks)</button>
         </div>
-        <input type="text" id="paperSearch" class="search-box" placeholder="Search papers, authors, venues...">
+        <input type="text" id="paperSearch" class="search-box" placeholder="Tìm kiếm tên bài báo, tác giả, hội nghị...">
       </div>
 
       <div style="overflow-x: auto;">
         <table id="papersTable">
           <thead>
             <tr>
-              <th>Paper & Authors</th>
-              <th>Venue / Year</th>
-              <th>Paradigm</th>
-              <th>Depth Injection?</th>
-              <th>Handles FoR Shift?</th>
-              <th>Primary Limitation & Gap</th>
+              <th>Bài báo & Tác giả (Paper & Authors)</th>
+              <th>Hội nghị / Năm (Venue)</th>
+              <th>Trường phái Kỹ thuật (Paradigm)</th>
+              <th>Có tiêm Depth?</th>
+              <th>Xử lý được FoR Shift?</th>
+              <th>Giới hạn Cốt lõi & Khoảng trống (Limitations)</th>
             </tr>
           </thead>
           <tbody>
@@ -839,10 +839,10 @@
                 <span class="paper-meta">Ziyan Liu, Nan Hu, Guilin Qi et al.</span>
               </td>
               <td><span class="tag-badge tag-bench">ACL 2025 (Long)</span></td>
-              <td>3D Benchmark</td>
-              <td><span class="status-cross">❌ No</span></td>
-              <td><span class="status-cross">Evaluated (Fails)</span></td>
-              <td style="color: var(--rose);">Baseline LoRA gets only 46.56%; identifies FRS as main error (38.2%).</td>
+              <td>Tập chuẩn 3D (3D Benchmark)</td>
+              <td><span class="status-cross">❌ Không</span></td>
+              <td><span class="status-cross">Đánh giá (Thất bại)</span></td>
+              <td style="color: var(--rose);">Baseline LoRA chỉ đạt 46.56%; chỉ ra FRS (Hệ quy chiếu) là nguyên nhân gây 38.2% lỗi.</td>
             </tr>
 
             <tr data-cat="depth">
@@ -851,10 +851,10 @@
                 <span class="paper-meta">Boyuan Chen, Sean Kirmani, Brian Ichter et al. (Google DeepMind)</span>
               </td>
               <td><span class="tag-badge tag-depth">CVPR 2024</span></td>
-              <td>3D Synthetic Pretrain</td>
-              <td><span class="status-check">✅ Pre-trained</span></td>
-              <td><span class="status-cross">❌ No</span></td>
-              <td>Requires 10M synthetic pairs; strictly camera-centric, fails on ego-centric shifts.</td>
+              <td>Tiền huấn luyện 3D (3D Pretraining)</td>
+              <td><span class="status-check">✅ Có (Pretrained)</span></td>
+              <td><span class="status-cross">❌ Không</span></td>
+              <td>Đòi hỏi 10 triệu cặp câu hỏi 3D tổng hợp; chỉ cố định ở góc nhìn máy ảnh (Camera-centric), bất lực khi đổi ngôi chủ thể.</td>
             </tr>
 
             <tr data-cat="depth">
@@ -863,22 +863,22 @@
                 <span class="paper-meta">Tsinghua University & Collaborators</span>
               </td>
               <td><span class="tag-badge tag-depth">NeurIPS 2024</span></td>
-              <td>Dual-Encoder Fusion</td>
+              <td>Hợp nhất Hai Bộ mã hóa (Dual-Encoder)</td>
               <td><span class="status-check">✅ Depth Anything</span></td>
-              <td><span class="status-cross">❌ No</span></td>
-              <td>Injects camera depth Z_cam; completely blind to internal object rotation heading.</td>
+              <td><span class="status-cross">❌ Không</span></td>
+              <td>Tiêm chiều sâu Z_cam từ máy ảnh; hoàn toàn không biết góc xoay nội tại của vật thể trong khung cảnh.</td>
             </tr>
 
             <tr data-cat="for">
               <td>
                 <span class="paper-title">Do Vision-Language Models Represent Space and How?</span>
-                <span class="paper-meta">Gabriele Janzen, Stephen C. Levinson (Max Planck)</span>
+                <span class="paper-meta">Gabriele Janzen, Stephen C. Levinson (Max Planck Institute)</span>
               </td>
               <td><span class="tag-badge tag-for">TACL 2023</span></td>
-              <td>Cognitive Analysis</td>
-              <td><span class="status-cross">❌ No</span></td>
-              <td><span class="status-cross">Analyzed (Fails)</span></td>
-              <td>Proved VLMs default to Relative FoR (viewer) and fail to switch to Intrinsic FoR.</td>
+              <td>Phân tích Nhận thức (Cognitive Study)</td>
+              <td><span class="status-cross">❌ Không</span></td>
+              <td><span class="status-cross">Phân tích (Thất bại)</span></td>
+              <td>Chứng minh VLM luôn mặc định nhìn theo Hệ quy chiếu Tương đối (Relative FoR - Máy ảnh) và thất bại khi chuyển sang Hệ quy chiếu Nội tại (Intrinsic FoR).</td>
             </tr>
 
             <tr data-cat="depth">
@@ -887,10 +887,10 @@
                 <span class="paper-meta">Chen et al.</span>
               </td>
               <td><span class="tag-badge tag-depth">arXiv 2024</span></td>
-              <td>3D Positional Embed</td>
+              <td>Nhúng Tọa độ 3D (Positional Embed)</td>
               <td><span class="status-check">✅ 3D Embeddings</span></td>
-              <td><span class="status-cross">❌ No</span></td>
-              <td>Corrupts general CLIP representation space; fails without dense ground truth boxes.</td>
+              <td><span class="status-cross">❌ Không</span></td>
+              <td>Làm hỏng không gian ngữ nghĩa CLIP tổng quát; suy giảm mạnh độ chính xác nếu không có Bounding Box chuẩn xác.</td>
             </tr>
 
             <tr data-cat="depth">
@@ -899,10 +899,10 @@
                 <span class="paper-meta">Remyx AI</span>
               </td>
               <td><span class="tag-badge tag-depth">Remyx 2024</span></td>
-              <td>Spatial Instruction LoRA</td>
-              <td><span class="status-cross">❌ No</span></td>
-              <td><span class="status-cross">❌ No</span></td>
-              <td>Improves Ay (depth: 51.85%) but causes severe collapse on Az (vertical: drops to 31.41%).</td>
+              <td>Tinh chỉnh Chỉ dẫn (Instruction LoRA)</td>
+              <td><span class="status-cross">❌ Không</span></td>
+              <td><span class="status-cross">❌ Không</span></td>
+              <td>Cải thiện được trục Chiều sâu Ay (51.85%) nhưng làm sụp đổ nghiêm trọng trục Cao/Thấp Az (rớt xuống 31.41%).</td>
             </tr>
 
             <tr data-cat="for">
@@ -911,10 +911,10 @@
                 <span class="paper-meta">Anonymous</span>
               </td>
               <td><span class="tag-badge tag-for">arXiv 2024</span></td>
-              <td>Textual Rationales</td>
-              <td><span class="status-check">✅ Via Text</span></td>
-              <td><span class="status-check">Partial</span></td>
-              <td>Highly brittle; if subject/object bounding box detector fails, entire reasoning breaks.</td>
+              <td>Lý lẽ Dạng văn bản (Textual Rationales)</td>
+              <td><span class="status-check">✅ Dạng Text</span></td>
+              <td><span class="status-check">Một phần</span></td>
+              <td>Cực kỳ mong manh; nếu mô hình phát hiện vật thể (Object Detector) bỏ sót vật, toàn bộ chuỗi suy luận văn bản sẽ sai hoàn toàn.</td>
             </tr>
 
             <tr data-cat="2d">
@@ -923,22 +923,22 @@
                 <span class="paper-meta">Fangyu Liu, Guy Emerson, Nigel Collier (Cambridge)</span>
               </td>
               <td><span class="tag-badge tag-2d">TACL 2023</span></td>
-              <td>2D Mask Benchmark</td>
-              <td><span class="status-cross">❌ No</span></td>
-              <td><span class="status-cross">❌ No</span></td>
-              <td>2D image plane only (X-Y); models perform near chance on projective relations.</td>
+              <td>Tập chuẩn Mặt phẳng 2D (2D Mask)</td>
+              <td><span class="status-cross">❌ Không</span></td>
+              <td><span class="status-cross">❌ Không</span></td>
+              <td>Chỉ giới hạn trên mặt phẳng ảnh 2D (X-Y); các mô hình thể hiện mức độ chính xác gần như đoán ngẫu nhiên trên quan hệ xạ ảnh (In front, Behind).</td>
             </tr>
 
             <tr data-cat="2d">
               <td>
                 <span class="paper-title">Ferret: Refer and Ground Anything at Any Granularity</span>
-                <span class="paper-meta">Haoxuan You et al. (Apple / Columbia)</span>
+                <span class="paper-meta">Haoxuan You et al. (Apple / Columbia University)</span>
               </td>
               <td><span class="tag-badge tag-2d">ICLR 2024</span></td>
-              <td>Spatial Sampler</td>
-              <td><span class="status-cross">❌ No</span></td>
-              <td><span class="status-cross">❌ No</span></td>
-              <td>Requires user to supply coordinate boxes or points; cannot do zero-shot 3D inference.</td>
+              <td>Lấy mẫu Không gian (Spatial Sampler)</td>
+              <td><span class="status-cross">❌ Không</span></td>
+              <td><span class="status-cross">❌ Không</span></td>
+              <td>Bắt buộc người dùng phải cung cấp tọa độ hộp hoặc điểm (Bounding Boxes / Points); không thể tự suy luận không gian 3D zero-shot.</td>
             </tr>
 
             <tr data-cat="depth">
@@ -947,10 +947,10 @@
                 <span class="paper-meta">Lihe Yang et al. (HKUST / TikTok)</span>
               </td>
               <td><span class="tag-badge tag-depth">arXiv 2024</span></td>
-              <td>Depth Foundation</td>
-              <td><span class="status-check">Tool SOTA</span></td>
+              <td>Mô hình Nền tảng Chiều sâu (Depth Model)</td>
+              <td><span class="status-check">Công cụ SOTA</span></td>
               <td>N/A</td>
-              <td>Pure perception backbone; produces 2.5D map but does not reason on language.</td>
+              <td>Là mô hình thị giác thuần túy (Vision Backbone); trích xuất bản đồ chiều sâu 2.5D nhưng không có khả năng suy luận ngôn ngữ.</td>
             </tr>
           </tbody>
         </table>
@@ -960,43 +960,43 @@
     <!-- The Golden Research Gap & Proposed Architecture -->
     <div class="gap-banner">
       <div class="badge-pill" style="background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.4); color: var(--emerald);">
-        🚀 True Novelty & Research Opportunity
+        🚀 Khoảng trống Học thuật Đột phá (True Novelty)
       </div>
-      <h2>The Unclaimed Frontier: Explicit 3D Coordinate Frame Transformation (T<sub>cam→obj</sub>)</h2>
+      <h2>Vùng đất Chưa ai Khai phá: Phép Biến đổi Hệ quy chiếu 3D Giải tích (T<sub>cam→obj</sub> Explicit Transformation)</h2>
       <p style="color: var(--text-muted); max-width: 950px; font-size: 1.05rem;">
-        Because <strong>prior 2024 papers (Spatial-MLLM, LLaVA-3D)</strong> proved that depth alone cannot resolve Frame of Reference Shifts, our proposed framework introduces a neuro-symbolic bridge: estimating the object's 3D pose vector, computing the analytical transformation matrix, and conditioning LLaVA on the true relative 3D coordinate frame.
+        Vì các <strong>công trình năm 2024 (Spatial-MLLM, LLaVA-3D)</strong> đã chứng minh việc chỉ tiêm Depth không thể giải quyết được lỗi Đảo Hệ quy chiếu (Frame of Reference Shift), kiến trúc đề xuất của chúng ta thiết lập một cầu nối <strong>Thần kinh - Ký hiệu (Neuro-Symbolic Bridge)</strong>: Ước lượng vector hướng nhìn 3D của vật thể, tính ma trận quay giải tích $R$, và điều kiện hóa LLaVA trên hệ tọa độ tương đối thực sự của chủ thể.
       </p>
 
       <div class="gap-architecture-grid">
         <div class="arch-step-box">
-          <span class="step-num">Step 1</span>
-          <h4 class="arch-title">Metric Monocular Depth</h4>
-          <p class="arch-desc">Extract per-pixel metric depth $(X_{cam}, Y_{cam}, Z_{cam})$ using Depth Anything V2 directly from 2D in-the-wild images without special sensors.</p>
+          <span class="step-num">Bước 1</span>
+          <h4 class="arch-title">Metric Monocular Depth (Ước lượng Chiều sâu Đơn ảnh)</h4>
+          <p class="arch-desc">Trích xuất tọa độ mét $(X_{cam}, Y_{cam}, Z_{cam})$ thông qua Depth Anything V2 trực tiếp từ ảnh 2D đời thường mà không cần cảm biến phần cứng chuyên dụng.</p>
         </div>
 
         <div class="arch-step-box">
-          <span class="step-num">Step 2</span>
-          <h4 class="arch-title">Object Heading & Pose Estimator</h4>
-          <p class="arch-desc">Extract the 3D heading orientation vector $\vec{h} = (\theta, \phi)$ of the reference subject to locate its intrinsic front-facing axis.</p>
+          <span class="step-num">Bước 2</span>
+          <h4 class="arch-title">Object Heading & Pose Estimator (Ước lượng Góc xoay Vật thể)</h4>
+          <p class="arch-desc">Trích xuất vector định hướng 3D $\vec{h} = (\theta, \phi)$ của vật thể tham chiếu để xác định trục mặt trước (Front-facing Axis) nội tại của nó.</p>
         </div>
 
         <div class="arch-step-box">
-          <span class="step-num">Step 3</span>
-          <h4 class="arch-title">Analytical 3D Transformation</h4>
-          <p class="arch-desc">Compute the rotation matrix $R_{cam \rightarrow obj}$ to rotate target coordinates from Camera Frame into Subject Frame: $P_{obj} = R \cdot (P_{target} - P_{subject})$.</p>
+          <span class="step-num">Bước 3</span>
+          <h4 class="arch-title">Analytical 3D Transformation (Biến đổi Tọa độ Giải tích)</h4>
+          <p class="arch-desc">Tính toán ma trận quay $R_{cam \rightarrow obj}$ để xoay tọa độ mục tiêu từ Hệ Camera sang Hệ Vật chủ: $P_{obj} = R \cdot (P_{target} - P_{subject})$.</p>
         </div>
 
         <div class="arch-step-box">
-          <span class="step-num">Step 4</span>
-          <h4 class="arch-title">Spatial-CoT Conditioning</h4>
-          <p class="arch-desc">Inject the transformed relative coordinate vector $(\Delta x', \Delta y', \Delta z')$ into LLaVA's instruction prompt, turning 40% guessing into rigorous geometric deduction.</p>
+          <span class="step-num">Bước 4</span>
+          <h4 class="arch-title">Spatial-CoT Conditioning (Điều kiện hóa Chuỗi Tư duy)</h4>
+          <p class="arch-desc">Đưa vector tọa độ tương đối đã xoay $(\Delta x', \Delta y', \Delta z')$ vào prompt chỉ dẫn của LLaVA, biến tỷ lệ đoán mò 40% thành bài toán suy luận hình học tường minh.</p>
         </div>
       </div>
     </div>
 
     <!-- Footer -->
     <footer>
-      <p>SpatialMQA Research Workspace • Department of NLP & Multi-modal AI • 2026</p>
+      <p>Không gian Nghiên cứu SpatialMQA • Bộ môn Xử lý Ngôn ngữ Tự nhiên & Trí tuệ Đa phương thức • 2026</p>
     </footer>
   </div>
 
@@ -1024,22 +1024,22 @@
       let color = "var(--rose)";
 
       if (relAngle >= 315 || relAngle < 45) {
-        ans = "IN FRONT OF";
+        ans = "IN FRONT OF (Ở ĐẰNG TRƯỚC)";
         color = "var(--emerald)";
       } else if (relAngle >= 45 && relAngle < 135) {
-        ans = "RIGHT OF";
+        ans = "RIGHT OF (Ở BÊN PHẢI)";
         color = "var(--cyan)";
       } else if (relAngle >= 135 && relAngle < 225) {
-        ans = "BEHIND";
+        ans = "BEHIND (Ở ĐẰNG SAU)";
         color = "var(--amber)";
       } else {
-        ans = "LEFT OF";
+        ans = "LEFT OF (Ở BÊN TRÁI)";
         color = "var(--purple)";
       }
 
       objAns.textContent = ans;
       objAns.style.color = color;
-      camAns.textContent = "RIGHT OF"; // Camera never changes!
+      camAns.textContent = "RIGHT OF (BÊN PHẢI)"; // Camera never changes!
     }
 
     rotSlider.addEventListener('input', updateSimulation);
