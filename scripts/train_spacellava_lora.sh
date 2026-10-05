@@ -4,7 +4,10 @@
 # Hardware: 1x NVIDIA A100 (40GB or 80GB)
 # ==============================================================================
 
-set -e
+set -eo pipefail
+
+export TRITON_CACHE_DIR="/tmp/triton_${USER:-user}"
+mkdir -p "${TRITON_CACHE_DIR}"
 
 # Model & Data Paths
 MODEL_PATH=${1:-"remyxai/SpaceLLaVA"}
