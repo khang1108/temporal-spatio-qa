@@ -30,7 +30,7 @@ mkdir -p "${OUTPUT_DIR}"
 mkdir -p logs
 
 CUDA_VISIBLE_DEVICES=${GPU_ID} deepspeed --include localhost:${GPU_ID} \
-    llava/train/train_mem.py \
+    scripts/train_mem.py \
     --deepspeed ${DEEPSPEED_CONFIG} \
     --lora_enable True \
     --lora_r 128 \
