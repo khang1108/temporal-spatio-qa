@@ -10,3 +10,8 @@ __pycache__/
 # Cached embeddings
 data/cached_embeddings/
 .venv/
+
+# Dataset images
+data/spatial_mqa/images/
+data/COCO2017/
+data/relevant_images/
