@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Khảo cứu Toàn diện 27 Bài báo: SpatialMQA & Suy luận Không gian theo Góc nhìn Chủ thể</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --bg-card: rgba(18, 24, 38, 0.75);
+      --bg-card-hover: rgba(26, 36, 56, 0.9);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(56, 189, 248, 0.35);
+      
+      --cyan: #38bdf8;
+      --cyan-glow: rgba(56, 189, 248, 0.2);
+      --emerald: #10b981;
+      --emerald-glow: rgba(16, 185, 129, 0.2);
+      --amber: #f59e0b;
+      --amber-glow: rgba(245, 158, 11, 0.2);
+      --rose: #f43f5e;
+      --rose-glow: rgba(244, 63, 94, 0.2);
+      --purple: #a855f7;
+      --indigo: #6366f1;
+      
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      line-height: 1.65;
+      background-image: 
+        radial-gradient(circle at 10% 15%, rgba(56, 189, 248, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 65%, rgba(168, 85, 247, 0.07) 0%, transparent 45%),
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
+      min-height: 100vh;
+      padding: 2.5rem 1.5rem 6rem 1.5rem;
+    }
+
+    .container {
+      max-width: 1420px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+      position: relative;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1.1rem;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 9999px;
+      color: var(--cyan);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 1.25rem;
+    }
+
+    h1 {
+      font-size: clamp(2.1rem, 3.8vw, 3.2rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      background: linear-gradient(135deg, #ffffff 20%, #38bdf8 65%, #a855f7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1.25rem;
+    }
+
+    .subtitle {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      max-width: 880px;
+      margin: 0 auto 2.5rem auto;
+    }
+
+    /* Navigation Bar */
+    .nav-bar {
+      display: flex;
+      justify-content: center;
+      gap: 0.6rem;
+      margin-bottom: 3rem;
+      flex-wrap: wrap;
+      background: rgba(18, 24, 38, 0.6);
+      padding: 0.5rem;
+      border-radius: 16px;
+      border: 1px solid var(--border-subtle);
+      max-width: 1050px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 0.6rem 1.2rem;
+      border-radius: 12px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .nav-btn.active {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--cyan);
+      color: var(--cyan);
+      box-shadow: 0 0 20px var(--cyan-glow);
+    }
+
+    /* Tab Panes */
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.35s ease;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Section Headers */
+    .sec-header {
+      margin-bottom: 2rem;
+    }
+
+    .sec-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+
+    .sec-desc {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      max-width: 950px;
+    }
+
+    /* Cards Grid */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .glass-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      padding: 1.75rem;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .glass-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--border-glow);
+      box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Callout Alert */
+    .alert-box {
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-left: 4px solid var(--amber);
+      border-radius: 14px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 2.5rem;
+      color: #cbd5e1;
+    }
+
+    .alert-box strong {
+      color: var(--amber);
+    }
+
+    .alert-box.danger {
+      background: rgba(244, 63, 94, 0.08);
+      border-color: rgba(244, 63, 94, 0.3);
+      border-left-color: var(--rose);
+    }
+
+    .alert-box.danger strong {
+      color: var(--rose);
+    }
+
+    .alert-box.success {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.3);
+      border-left-color: var(--emerald);
+    }
+
+    .alert-box.success strong {
+      color: var(--emerald);
+    }
+
+    /* Table Styles */
+    .table-wrapper {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      overflow: hidden;
+      margin-bottom: 3rem;
+    }
+
+    .table-toolbar {
+      padding: 1.25rem 1.5rem;
+      background: rgba(0, 0, 0, 0.25);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 0.55rem 1rem;
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.9rem;
+      min-width: 280px;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: var(--cyan);
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-chip {
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-chip.active {
+      background: var(--cyan);
+      color: #000;
+      border-color: var(--cyan);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.92rem;
+    }
+
+    th {
+      padding: 1rem 1.25rem;
+      background: rgba(0, 0, 0, 0.35);
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    td {
+      padding: 1.15rem 1.25rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      vertical-align: top;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .pid-badge {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--cyan);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      margin-bottom: 0.35rem;
+    }
+
+    .tag-cat {
+      display: inline-block;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .cat-bench { background: rgba(168, 85, 247, 0.15); color: var(--purple); }
+    .cat-geom { background: rgba(16, 185, 129, 0.15); color: var(--emerald); }
+    .cat-pt { background: rgba(56, 189, 248, 0.15); color: var(--cyan); }
+    .cat-bias { background: rgba(245, 158, 11, 0.15); color: var(--amber); }
+
+    /* Hypotheses Cards */
+    .hypo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3.5rem;
+    }
+
+    .hypo-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      padding: 1.75rem;
+      position: relative;
+    }
+
+    .hypo-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 6px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+    }
+
+    .h1-badge { background: rgba(56, 189, 248, 0.2); color: var(--cyan); }
+    .h2-badge { background: rgba(244, 63, 94, 0.2); color: var(--rose); }
+    .h3-badge { background: rgba(16, 185, 129, 0.2); color: var(--emerald); }
+
+    .hypo-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.75rem;
+    }
+
+    .hypo-item {
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+      color: var(--text-muted);
+    }
+
+    .hypo-item strong {
+      color: var(--text-main);
+    }
+
+    /* Pipeline 5 Steps */
+    .pipeline-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      margin-bottom: 3rem;
+    }
+
+    .pipeline-step {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 1.25rem;
+      align-items: center;
+      transition: all 0.25s ease;
+    }
+
+    .pipeline-step:hover {
+      border-color: var(--cyan);
+      transform: translateX(4px);
+    }
+
+    .step-badge {
+      font-size: 1.6rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--cyan);
+      text-align: center;
+    }
+
+    .step-content h4 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.25rem;
+    }
+
+    .step-content p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 5rem;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="badge-pill">
+        <span>📑 Khảo cứu Chuyên sâu 27 Công trình (05/10/2026)</span>
+      </div>
+      <h1>SpatialMQA & Suy luận Góc nhìn Người trong Ảnh</h1>
+      <p class="subtitle">
+        Bản trực quan hóa giải mã toàn diện khảo cứu 27 paper: Phân biệt 3 loại khoảng trống học thuật, bóc trần những điều <em>đã được làm rồi (Prior Art)</em>, và định vị chính xác <strong>Research Gap khả thi duy nhất</strong>.
+      </p>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-bar">
+      <button class="nav-btn active" data-tab="tab-insights">🎯 1. Sự Thật về Research Gap</button>
+      <button class="nav-btn" data-tab="tab-spatialmqa">🔍 2. Kiểm tra lại SpatialMQA</button>
+      <button class="nav-btn" data-tab="tab-papers">📚 3. Ma trận 27 Paper</button>
+      <button class="nav-btn" data-tab="tab-done">⚖️ 4. Đã làm vs Bỏ ngỏ</button>
+      <button class="nav-btn" data-tab="tab-pipeline">🚀 5. Đề xuất Thực nghiệm & RQ</button>
+    </nav>
+
+    <!-- TAB 1: Sự Thật về Research Gap -->
+    <div id="tab-insights" class="tab-content active">
+      <div class="sec-header">
+        <h2 class="sec-title">⚠️ Cảnh báo Khoa học: Tránh Tuyên bố "Đao to búa lớn"</h2>
+        <p class="sec-desc">
+          Khảo cứu 27 bài báo chỉ ra một sự thật rất rõ: <strong>“MLLM yếu ở góc nhìn thứ nhất” là một vấn đề ĐÃ ĐƯỢC CÔNG BỐ, không phải là một phát hiện mới của chúng ta</strong>.
+        </p>
+      </div>
+
+      <div class="alert-box danger">
+        <strong>TUYỆT ĐỐI KHÔNG TUYÊN BỐ CÁC Ý SAU TRONG PROPOSAL/PAPER:</strong>
+        <ul style="margin-top: 0.5rem; margin-left: 1.5rem; line-height: 1.7;">
+          <li>❌ <em>"Chưa ai nghiên cứu suy luận không gian theo góc nhìn thứ nhất (First-person spatial reasoning)"</em> $\rightarrow$ <strong>SAI!</strong> Đã có SAT, SPAR, ViewSpatial, Beyond Recognition nghiên cứu.</li>
+          <li>❌ <em>"Tất cả các model hiện nay đều chỉ nhìn theo góc nhìn máy ảnh (Camera-centric)"</em> $\rightarrow$ <strong>SAI!</strong> RoboSpatial và SpatialLLM đã có object-relative questions.</li>
+          <li>❌ <em>"Ước lượng hướng nhìn (Pose/Heading) + đổi tọa độ là phương pháp hoàn toàn mới do ta nghĩ ra"</em> $\rightarrow$ <strong>SAI!</strong> Các mô hình <strong>APC (ICCV 2025)</strong>, <strong>SpatialReasoner (NeurIPS 2025)</strong>, và đặc biệt là <strong>LeRF (2026)</strong> đã làm điều này!</li>
+        </ul>
+      </div>
+
+      <div class="cards-grid">
+        <div class="glass-card">
+          <div style="color: var(--rose); font-size: 1.8rem; font-weight: 800; margin-bottom: 0.5rem;">01</div>
+          <h3 style="font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Performance Gap (Khoảng cách Điểm số)</h3>
+          <p style="color: var(--text-muted); font-size: 0.95rem;">
+            Model hiện tại (LLaVA ~40%, GPT-4o ~33%) còn cách rất xa người (Human 98.2%) trên bài toán này. Tuy nhiên, <strong>chỉ có điểm thấp chưa đủ để làm đóng góp khoa học</strong>. Điểm thấp chỉ là triệu chứng, không phải nguyên nhân.
+          </p>
+        </div>
+
+        <div class="glass-card">
+          <div style="color: var(--amber); font-size: 1.8rem; font-weight: 800; margin-bottom: 0.5rem;">02</div>
+          <h3 style="font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Mechanism Gap (Lỗ hổng Cơ chế)</h3>
+          <p style="color: var(--text-muted); font-size: 0.95rem;">
+            Chưa ai phân rã rành mạch: Khi model trả lời sai, <strong>lỗi là do Định vị người sai (Grounding error), hay do Ước lượng hướng nhìn sai (Orientation ambiguity), hay do Biến đổi tọa độ sai, hay chỉ đơn giản là Học vẹt đáp án (Lexical/Option Bias)?</strong>
+          </p>
+        </div>
+
+        <div class="glass-card">
+          <div style="color: var(--emerald); font-size: 1.8rem; font-weight: 800; margin-bottom: 0.5rem;">03</div>
+          <h3 style="font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Candidate Gap (Khoảng trống Đề xuất)</h3>
+          <p style="color: var(--text-muted); font-size: 0.95rem;">
+            Khoảng trống thực sự có giá trị: <strong>Khả năng chọn và sử dụng nhất quán hệ quy chiếu của một người được chỉ định trong ảnh thật, đặc biệt khi hướng đầu và thân mâu thuẫn nhau (Head vs Torso Ambiguity) hoặc trái ngược với góc nhìn máy ảnh.</strong>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: Kiểm tra lại SpatialMQA -->
+    <div id="tab-spatialmqa" class="tab-content">
+      <div class="sec-header">
+        <h2 class="sec-title">🔍 Mổ xẻ Bản chất Dataset SpatialMQA (ACL 2025)</h2>
+        <p class="sec-desc">
+          Nhiều người đọc lướt hiểu nhầm SpatialMQA chỉ có 1 loại câu hỏi. Thực tế, benchmark phân rã làm <strong>3 dạng câu hỏi (Q1, Q2, Q3)</strong> với số lượng mẫu và bản chất hoàn toàn khác nhau:
+        </p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 3rem;">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Dạng câu hỏi</th>
+                <th>Vai trò Người quan sát (Observer)</th>
+                <th>Số mẫu Test</th>
+                <th>Bản chất hình học</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong style="color: var(--cyan);">Q1</strong></td>
+                <td>Ngoài ảnh (Góc nhìn Camera / Viewer)</td>
+                <td><strong>452</strong></td>
+                <td>Góc nhìn tĩnh từ máy ảnh, không cần đổi ngôi.</td>
+              </tr>
+              <tr>
+                <td><strong style="color: var(--rose);">Q2</strong></td>
+                <td>Chính vật thể tham chiếu: <em>"If you are X..."</em></td>
+                <td><strong>590</strong></td>
+                <td><strong>Đổi hệ quy chiếu 100%</strong> sang chủ thể được chỉ định.</td>
+              </tr>
+              <tr>
+                <td><strong style="color: var(--purple);">Q3</strong></td>
+                <td>Một sinh vật/người khác cả chủ thể và mục tiêu</td>
+                <td><strong>34</strong> (Rất nhỏ!)</td>
+                <td>Hệ quy chiếu của bên thứ 3 trong khung cảnh.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Mô hình đánh giá (Table 5)</th>
+                <th>Độ chính xác Q2 (%)</th>
+                <th>Ghi chú phương thức đánh giá</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>SpaceLLaVA + LoRA</strong></td>
+                <td style="color: var(--emerald); font-weight: 700;">42.37%</td>
+                <td>Fine-tune LoRA trên tập train SpatialMQA</td>
+              </tr>
+              <tr>
+                <td><strong>LLaVA-1.5-7B + LoRA</strong></td>
+                <td style="color: var(--cyan); font-weight: 700;">40.99%</td>
+                <td>Fine-tune LoRA trên tập train SpatialMQA</td>
+              </tr>
+              <tr>
+                <td><strong>InstructBLIP + LoRA</strong></td>
+                <td>40.68%</td>
+                <td>Fine-tune LoRA trên tập train SpatialMQA</td>
+              </tr>
+              <tr>
+                <td><strong>GPT-4o (Closed API)</strong></td>
+                <td style="color: var(--amber); font-weight: 700;">33.74%</td>
+                <td>Zero-shot (chỉ test 500 mẫu ngẫu nhiên)</td>
+              </tr>
+              <tr>
+                <td><strong>Gemini-1.5-Flash (Closed API)</strong></td>
+                <td style="color: var(--rose); font-weight: 700;">26.83%</td>
+                <td>Zero-shot (chỉ test 500 mẫu ngẫu nhiên)</td>
+              </tr>
+              <tr style="background: rgba(16, 185, 129, 0.08);">
+                <td><strong>Con người (Human Ceiling)</strong></td>
+                <td style="color: var(--emerald); font-weight: 800;">98.24%</td>
+                <td>Con người giải quyết cực kỳ dễ dàng</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="alert-box success">
+        <strong>Lưu ý chí mạng khi làm thực nghiệm:</strong>
+        <p style="margin-top: 0.4rem; font-size: 0.95rem;">
+          1. <strong>Tập Q3 chỉ có đúng 34 mẫu test:</strong> Không được lấy điểm Q3 để so sánh độ khó hay khoe kết quả vì tập mẫu quá nhỏ, không có ý nghĩa thống kê!<br>
+          2. <strong>Quy ước nhãn Front/Behind trong Table 2:</strong> Không chỉ là hiệu tọa độ đơn thuần ($\Delta y > 0$), mà tác giả có ràng buộc điều kiện dấu và khoảng cách so với observer. Phải dùng đúng quy ước của bài báo thì code đánh giá mới ra đúng số!
+        </p>
+      </div>
+    </div>
+
+    <!-- TAB 3: Ma trận 27 Paper -->
+    <div id="tab-papers" class="tab-content">
+      <div class="sec-header">
+        <h2 class="sec-title">📚 Ma trận Tra cứu Chi tiết 27 Bài báo (P01 – P27)</h2>
+        <p class="sec-desc">
+          Bấm các thẻ bên dưới để lọc bài báo theo nhóm nghiên cứu hoặc gõ từ khóa tìm kiếm:
+        </p>
+      </div>
+
+      <div class="table-wrapper">
+        <div class="table-toolbar">
+          <div class="filter-group">
+            <button class="filter-chip active" data-f="all">Tất cả (27)</button>
+            <button class="filter-chip" data-f="bench">4.1 Benchmark & Nền tảng (8)</button>
+            <button class="filter-chip" data-f="geom">4.2 Biểu diễn Hình học 3D (7)</button>
+            <button class="filter-chip" data-f="pt">4.3 Perspective Taking Trực tiếp (8)</button>
+            <button class="filter-chip" data-f="bias">4.4 Grounding & Bias (4)</button>
+          </div>
+          <input type="text" id="pSearch" class="search-input" placeholder="Tìm tên bài, tác giả, hội nghị (ACL, CVPR, NeurIPS)...">
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table id="tbl27">
+            <thead>
+              <tr>
+                <th style="width: 70px;">ID</th>
+                <th style="width: 280px;">Tên Bài báo & Hội nghị</th>
+                <th style="width: 130px;">Nhóm</th>
+                <th>Cơ chế & Phát hiện Chính</th>
+                <th style="width: 320px;">Giới hạn & Bài học cho Đề tài</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- P01-P08: Benchmarks -->
+              <tr data-c="bench">
+                <td><span class="pid-badge">P01</span></td>
+                <td><strong>SpatialMQA</strong><br><small style="color: var(--text-dim);">ACL 2025</small></td>
+                <td><span class="tag-cat cat-bench">Benchmark</span></td>
+                <td>Benchmark ảnh COCO không bbox; phân loại câu hỏi Q1/Q2/Q3; chỉ ra perspective substitution là nguyên nhân gây lỗi lớn.</td>
+                <td style="color: var(--rose);">Đã xác lập failure mode nên không thể lấy chính phát hiện đó làm novelty. Q3 quá nhỏ (34 mẫu).</td>
+              </tr>
+              <tr data-c="bench">
+                <td><span class="pid-badge">P02</span></td>
+                <td><strong>Visual Spatial Reasoning (VSR)</strong><br><small style="color: var(--text-dim);">TACL 2023</small></td>
+                <td><span class="tag-cat cat-bench">Benchmark</span></td>
+                <td>10,972 cặp ảnh-text, 66 quan hệ. Chấp nhận TRUE nếu đúng theo camera HOẶC intrinsic frame.</td>
+                <td>Đúng VSR chưa chứng minh chọn đúng hệ quy chiếu được yêu cầu vì protocol chấp nhận cả 2.</td>
+              </tr>
+              <tr data-c="bench">
+                <td><span class="pid-badge">P03</span></td>
+                <td><strong>SpatialSense</strong><br><small style="color: var(--text-dim);">ICCV 2019</small></td>
+                <td><span class="tag-cat cat-bench">Benchmark</span></td>
+                <td>Adversarial crowdsourcing chống shortcut ngôn ngữ/vị trí 2D. Box-only đạt tới 68.8% (gần bằng model dùng cả ảnh 71.1%).</td>
+                <td>Có input tên vật/bbox nên không đánh giá được lỗi do model tự tìm vật (grounding). Phải có baseline chỉ dùng text để kiểm tra shortcut.</td>
+              </tr>
+              <tr data-c="bench">
+                <td><span class="pid-badge">P04</span></td>
+                <td><strong>Rel3D</strong><br><small style="color: var(--text-dim);">NeurIPS 2020</small></td>
+                <td><span class="tag-cat cat-bench">Benchmark</span></td>
+                <td>27,336 ảnh 3D rendered; tách biệt observer-relative và intrinsic frame; chỉ ra sự mâu thuẫn giữa hướng đầu và hướng thân người.</td>
+                <td>Ảnh 3D nhân tạo. Đã nghiên cứu frame distinction từ 2020 nên không được xem việc phân biệt frame là ý tưởng mới.</td>
+              </tr>
+              <tr data-c="bench">
+                <td><span class="pid-badge">P05</span></td>
+                <td><strong>EmbSpatial-Bench</strong><br><small style="color: var(--text-dim);">ACL 2024</small></td>
+                <td><span class="tag-cat cat-bench">Benchmark</span></td>
+                <td>3,640 MCQ phòng trong nhà. "Egocentric" ở đây là góc nhìn của robot/camera di chuyển, KHÔNG PHẢI người được nhìn thấy trong ảnh.</td>
+                <td>Khác biệt với SpatialMQA (nhập vai người TRONG ảnh). Cách chấm (likelihood vs generation) làm lệch điểm từ 78% xuống 32%.</td>
+              </tr>
+              <tr data-c="bench">
+                <td><span class="pid-badge">P06</span></td>
+                <td><strong>3DSRBench</strong><br><small style="color: var(--text-dim);">ICCV 2025</small></td>
+                <td><span class="tag-cat cat-bench">Benchmark</span></td>
+                <td>Dùng CircularEval và FlipEval để giảm hiện tượng học vẹt thứ tự đáp án (A/B/C/D) hoặc lật ảnh.</td>
+                <td>Kiểm tra hướng vật thể (object-centric orientation) nói chung, chưa có bài test riêng cho người được chỉ định trong ảnh.</td>
+              </tr>
+              <tr data-c="bench">
+                <td><span class="pid-badge">P07</span></td>
+                <td><strong>StepGame</strong><br><small style="color: var(--text-dim);">AAAI 2022</small></td>
+                <td><span class="tag-cat cat-bench">Benchmark</span></td>
+                <td>Suy luận không gian đa bước thuần text (Multi-hop spatial reasoning). Điểm tụt từ 85.7% (k=1) xuống 31.2% (k=5).</td>
+                <td>Thuần text, không có thị giác hay góc nhìn người. Dùng làm baseline kiểm chứng khả năng suy luận logic thuần túy của LLM.</td>
+              </tr>
+              <tr data-c="bench">
+                <td><span class="pid-badge">P08</span></td>
+                <td><strong>SPARTQA</strong><br><small style="color: var(--text-dim);">NAACL 2021</small></td>
+                <td><span class="tag-cat cat-bench">Benchmark</span></td>
+                <td>Spatial QA dạng văn bản với các phép đảo, lượng từ, và câu hỏi không xác định (Unknown).</td>
+                <td>Độ chính xác đơn lẻ không phản ánh đúng; model có thể trả lời nhất quán nhưng nhất quán... sai!</td>
+              </tr>
+
+              <!-- P09-P15: Geometry & Tools -->
+              <tr data-c="geom">
+                <td><span class="pid-badge">P09</span></td>
+                <td><strong>SpatialVLM</strong><br><small style="color: var(--text-dim);">CVPR 2024</small></td>
+                <td><span class="tag-cat cat-geom">Hình học 3D</span></td>
+                <td>Google DeepMind tự sinh 2 tỷ câu hỏi 3D trên 10 triệu ảnh bằng pipeline depth + 3D bounding boxes để pretrain VLM.</td>
+                <td>Kế thừa toàn bộ nhiễu của depth map; vẫn là góc nhìn camera, không giải quyết việc xoay góc nhìn theo chủ thể.</td>
+              </tr>
+              <tr data-c="geom">
+                <td><span class="pid-badge">P10</span></td>
+                <td><strong>SpatialRGPT</strong><br><small style="color: var(--text-dim);">NeurIPS 2024</small></td>
+                <td><span class="tag-cat cat-geom">Hình học 3D</span></td>
+                <td>Dùng region boxes/masks và tùy chọn depth để sinh scene graphs có hiệu chỉnh tọa độ 3D.</td>
+                <td>Hộp bao thẳng trục (Axis-aligned boxes) không bắt được góc nghiêng/quay của người; cần biết rõ lúc test có cấp bbox hay không.</td>
+              </tr>
+              <tr data-c="geom">
+                <td><span class="pid-badge">P11</span></td>
+                <td><strong>SpatialBot</strong><br><small style="color: var(--text-dim);">ICRA 2025</small></td>
+                <td><span class="tag-cat cat-geom">Hình học 3D</span></td>
+                <td>Mã hóa RGBD chuyên dụng. Depth score >99% nhưng điểm quan hệ vị trí chỉ 61.8% (thấp hơn GPT-4o thuần RGB 70.6%).</td>
+                <td style="color: var(--rose);"><strong>Chứng minh: Đo độ sâu tốt KHÔNG bảo đảm trả lời quan hệ không gian tốt</strong>, và depth sensor không hề cho biết hướng nhìn của người!</td>
+              </tr>
+              <tr data-c="geom">
+                <td><span class="pid-badge">P12</span></td>
+                <td><strong>SpatialLLM</strong><br><small style="color: var(--text-dim);">CVPR 2025</small></td>
+                <td><span class="tag-cat cat-geom">Hình học 3D</span></td>
+                <td>Học giám sát góc quay vật thể (Object Orientation Supervision); inference thuần RGB.</td>
+                <td>Chỉ giải quyết được vật cứng (rigid-object pose như bàn ghế xe cộ), chưa giải quyết được người có khớp cử động (đầu quay một nơi, thân quay một nẻo).</td>
+              </tr>
+              <tr data-c="geom">
+                <td><span class="pid-badge">P13</span></td>
+                <td><strong>SpatialReasoner</strong><br><small style="color: var(--text-dim);">NeurIPS 2025</small></td>
+                <td><span class="tag-cat cat-geom">Hình học 3D</span></td>
+                <td>Dự đoán tọa độ và góc xoay 3D tường minh, tính khoảng cách/góc, dùng RL (SFT + GRPO).</td>
+                <td>Độ chính xác góc xoay (Orientation accuracy) chỉ đạt 31.0%. Thưởng cho đáp án cuối cùng đôi khi làm tọa độ hình học trung gian bị méo mó.</td>
+              </tr>
+              <tr data-c="geom">
+                <td><span class="pid-badge">P14</span></td>
+                <td><strong>RoboSpatial</strong><br><small style="color: var(--text-dim);">CVPR 2025</small></td>
+                <td><span class="tag-cat cat-geom">Hình học 3D</span></td>
+                <td>Có đúng 6 quan hệ định hướng (left, right, front, behind, above, below) dưới 3 hệ quy chiếu: ego, world, object frames.</td>
+                <td>Loại bỏ hoàn toàn con người và động vật (Humans/Animals). Khoảng trống của ta nằm ở con người và góc xoay cơ thể, không phải ở 6 quan hệ.</td>
+              </tr>
+              <tr data-c="geom">
+                <td><span class="pid-badge">P15</span></td>
+                <td><strong>SpaceTools</strong><br><small style="color: var(--text-dim);">CVPR 2026</small></td>
+                <td><span class="tag-cat cat-geom">Hình học 3D</span></td>
+                <td>Qwen2.5-VL gọi các công cụ ngoài: pointing, segmentation, depth, cuboid projection qua RL tương tác kép.</td>
+                <td>Lỗi của các tool bị tích lũy (Error propagation). Việc gọi tool + đổi tọa độ chỉ là mở rộng pipeline công cụ, không phải kiến trúc mới đầu tiên.</td>
+              </tr>
+
+              <!-- P16-P23: Perspective Taking Direct -->
+              <tr data-c="pt">
+                <td><span class="pid-badge">P16</span></td>
+                <td><strong>SAT</strong><br><small style="color: var(--text-dim);">COLM 2025</small></td>
+                <td><span class="tag-cat cat-pt">Góc nhìn</span></td>
+                <td>Tạo 175K câu hỏi trong môi trường ảo ProcTHOR để dạy model tưởng tượng góc nhìn người quan sát (Imagined Viewer).</td>
+                <td>Dữ liệu ảo hóa; câu hỏi dạng nhị phân đơn giản; không chứng minh được trên 6 quan hệ phức tạp của người thật trong ảnh SpatialMQA.</td>
+              </tr>
+              <tr data-c="pt">
+                <td><span class="pid-badge">P17</span></td>
+                <td><strong>SPAR</strong><br><small style="color: var(--text-dim);">NeurIPS 2025</small></td>
+                <td><span class="tag-cat cat-pt">Góc nhìn</span></td>
+                <td>Tập dữ liệu SPAR-7M với 33 tác vụ; đo khả năng tưởng tượng không gian và thay đổi góc nhìn (View Change).</td>
+                <td>Tập trung vào môi trường tĩnh trong nhà; không có đánh giá chuyên biệt cho việc nhập vai vào một người cụ thể trong ảnh tự nhiên.</td>
+              </tr>
+              <tr data-c="pt">
+                <td><span class="pid-badge">P18</span></td>
+                <td><strong>ViewSpatial-Bench</strong><br><small style="color: var(--text-dim);">ECCV 2026 / 2025</small></td>
+                <td><span class="tag-cat cat-pt">Góc nhìn</span></td>
+                <td>Có tập con 864 ảnh COCO gán nhãn góc nhìn người thật, có gán nhãn hướng đầu và thân. Qwen2.5-VL tăng từ 28% lên 71%.</td>
+                <td style="color: var(--rose);"><strong>Prior art trực tiếp nhất đối với bài toán "người trong ảnh".</strong> Cho thấy không thể tuyên bố "chưa ai đo góc nhìn người trong ảnh COCO".</td>
+              </tr>
+              <tr data-c="pt">
+                <td><span class="pid-badge">P19</span></td>
+                <td><strong>Beyond Recognition</strong><br><small style="color: var(--text-dim);">arXiv 2026</small></td>
+                <td><span class="tag-cat cat-pt">Góc nhìn</span></td>
+                <td>144 kịch bản mô hình LEGO kiểm soát góc nhìn; bóc tách lỗi nhận diện, lỗi hướng nhìn và lỗi xoay hệ quy chiếu.</td>
+                <td>Khi cấp góc xoay chuẩn (Oracle orientation), model vẫn chỉ cải thiện hạn chế $\rightarrow$ Chứng tỏ model còn bị lỗi ở khâu suy luận logic sau khi xoay.</td>
+              </tr>
+              <tr data-c="pt">
+                <td><span class="pid-badge">P20</span></td>
+                <td><strong>Egocentric Bias / FlipSet</strong><br><small style="color: var(--text-dim);">arXiv 2026</small></td>
+                <td><span class="tag-cat cat-pt">Góc nhìn</span></td>
+                <td>Thử nghiệm trên 103 model bằng cách xoay góc 180°. 75.88% câu trả lời bị dính chặt vào góc nhìn máy ảnh của người chụp.</td>
+                <td>Chỉ kiểm tra 1 phép quay 180° và đọc ký tự; không phải 6 quan hệ không gian. Cung cấp bằng chứng model bị thiên kiến góc nhìn máy ảnh.</td>
+              </tr>
+              <tr data-c="pt">
+                <td><span class="pid-badge">P21</span></td>
+                <td><strong>SpinBench</strong><br><small style="color: var(--text-dim);">ICLR 2026</small></td>
+                <td><span class="tag-cat cat-pt">Góc nhìn</span></td>
+                <td>Đo lường góc nhìn và phép quay qua 51 tác vụ. Nhiều tác vụ model đạt điểm gần như đoán mò, nhưng khi cấp mệnh đề sẵn thì trả lời tốt.</td>
+                <td>Chỉ tập trung vào mặt phẳng ngang (X-Y), bỏ qua trục thẳng đứng (Vertical Z). Chỉ ra rằng model có thể "trả lời nhất quán nhưng sai".</td>
+              </tr>
+              <tr data-c="pt">
+                <td><span class="pid-badge">P22</span></td>
+                <td><strong>Imaginative Perception Tokens (IPT)</strong><br><small style="color: var(--text-dim);">arXiv 2026</small></td>
+                <td><span class="tag-cat cat-pt">Góc nhìn</span></td>
+                <td>Bắt model sinh ra token "tưởng tượng thị giác" trung gian trước khi trả lời câu hỏi góc nhìn.</td>
+                <td>Việc ép model tự vẽ/tưởng tượng ảnh trung gian đôi khi làm giảm độ chính xác so với việc chỉ huấn luyện nhãn trực tiếp.</td>
+              </tr>
+              <tr data-c="pt">
+                <td><span class="pid-badge">P23</span></td>
+                <td><strong>LeRF</strong><br><small style="color: var(--text-dim);">arXiv 28/09/2026</small></td>
+                <td><span class="tag-cat cat-pt">Góc nhìn</span></td>
+                <td>Học vẽ các trục tọa độ chiếu (Origin, Front, Left, Up) lên ảnh; có huấn luyện góc quay của người; dùng RL (GRPO).</td>
+                <td style="color: var(--rose);"><strong>PRIOR ART MỚI NHẤT VÀ NGUY HIỂM NHẤT:</strong> Tác giả đã học vẽ hệ tọa độ người lên ảnh. Vì vậy ý tưởng "vẽ hệ quy chiếu tường minh" đơn thuần KHÔNG CÒN MỚI!</td>
+              </tr>
+
+              <!-- P24-P27: Grounding & Bias -->
+              <tr data-c="bias">
+                <td><span class="pid-badge">P24</span></td>
+                <td><strong>APC (Mental Imagery Simulation)</strong><br><small style="color: var(--text-dim);">ICCV 2025</small></td>
+                <td><span class="tag-cat cat-bias">Grounding & Bias</span></td>
+                <td>Dùng GroundingDINO + SAM + DepthPro + OrientAnything để ước lượng hình học, đổi hệ quy chiếu sang tọa độ trừu tượng.</td>
+                <td>Đã thực hiện pipeline: Pose + Depth + Đổi tọa độ! Tuy nhiên trong bài này, quan hệ Front/Behind bị biến thành bài toán nhìn thấy (Visibility), chưa chuẩn 6 nhãn.</td>
+              </tr>
+              <tr data-c="bias">
+                <td><span class="pid-badge">P25</span></td>
+                <td><strong>AdaptVis</strong><br><small style="color: var(--text-dim);">ICML 2025</small></td>
+                <td><span class="tag-cat cat-bias">Grounding & Bias</span></td>
+                <td>Phân tích cơ chế Attention: Vị trí chú ý của mắt nhìn quan trọng hơn việc tăng trọng số toàn bộ visual tokens.</td>
+                <td>Không có cơ chế xoay hệ quy chiếu theo người. Chỉ giải thích được vì sao model nhìn sai vị trí trên ảnh 2D.</td>
+              </tr>
+              <tr data-c="bias">
+                <td><span class="pid-badge">P26</span></td>
+                <td><strong>Thinking with Visual Grounding</strong><br><small style="color: var(--text-dim);">arXiv 2026</small></td>
+                <td><span class="tag-cat cat-bias">Grounding & Bias</span></td>
+                <td>Cho Gemma3 suy nghĩ bằng Bounding Box/Point trước khi trả lời. Điểm SpatialMQA tăng từ 25.3% lên 39.1%.</td>
+                <td>Chỉ báo cáo điểm trung bình SpatialMQA, không báo cáo riêng Q2/Q3 $\rightarrow$ Không rõ tăng điểm là do định vị tốt hơn ở Q1 hay thực sự hiểu góc nhìn ở Q2.</td>
+              </tr>
+              <tr data-c="bias">
+                <td><span class="pid-badge">P27</span></td>
+                <td><strong>Spatial Lexical Bias</strong><br><small style="color: var(--text-dim);">arXiv 2026</small></td>
+                <td><span class="tag-cat cat-bias">Grounding & Bias</span></td>
+                <td>Đảo thứ tự các đáp án lựa chọn (A/B/C/D); chỉ ra model bị thiên kiến từ vựng cực nặng; can thiệp kích hoạt tăng +32.6%.</td>
+                <td>Bài này chủ động LOẠI BỎ câu hỏi đổi góc nhìn (Perspective Substitution)! Cơ hội mở: Kiểm tra xem thiên kiến từ vựng có tương tác làm model lười đổi góc nhìn ở Q2 hay không.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: Đã làm vs Bỏ ngỏ -->
+    <div id="tab-done" class="tab-content">
+      <div class="sec-header">
+        <h2 class="sec-title">⚖️ Đối Chiếu: Những gì Thế giới đã làm vs Vùng đất Chưa ai khai phá</h2>
+        <p class="sec-desc">
+          Bảng phân định ranh giới giữa những ý tưởng đã có mô hình làm rồi và khoảng trống hẹp nhưng chắc chắn cho đề tài của chúng ta:
+        </p>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 250px;">Ý tưởng Ban đầu</th>
+              <th style="width: 280px;">Các Công trình Đi trước Đã Làm (Prior Art)</th>
+              <th style="width: 140px;">Tình trạng</th>
+              <th>Đánh giá Khoa học & Định vị Lại cho Đề tài</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Benchmark cho người trong ảnh</strong></td>
+              <td>SpatialMQA, ViewSpatial-Bench, Beyond Recognition</td>
+              <td><span class="status-check" style="color: var(--amber);">ĐÃ CÓ</span></td>
+              <td>Không thể tự nhận là người đầu tiên tạo bài test cho góc nhìn người trong ảnh.</td>
+            </tr>
+            <tr>
+              <td><strong>6 quan hệ không gian dưới nhiều góc nhìn</strong></td>
+              <td>RoboSpatial (CVPR 2025)</td>
+              <td><span class="status-check" style="color: var(--amber);">ĐÃ CÓ</span></td>
+              <td>RoboSpatial đã có đủ ego/world/object frame cho 6 quan hệ, nhưng họ loại trừ con người. Điểm mới của ta là tập trung vào <strong>con người</strong>.</td>
+            </tr>
+            <tr>
+              <td><strong>Ước lượng Pose + Depth + Đổi tọa độ</strong></td>
+              <td>APC (ICCV 2025), SpatialReasoner (NeurIPS 2025)</td>
+              <td><span class="status-check" style="color: var(--amber);">ĐÃ CÓ</span></td>
+              <td>Không thể nhận "pose + depth + rotation" là phát minh mới. Điểm mới phải là <strong>cách xử lý sự mâu thuẫn giữa đầu và thân khi góc nhìn mơ hồ</strong>.</td>
+            </tr>
+            <tr>
+              <td><strong>Vẽ trục tọa độ hệ quy chiếu lên ảnh</strong></td>
+              <td>LeRF (arXiv 28/09/2026)</td>
+              <td><span class="status-check" style="color: var(--amber);">ĐÃ CÓ</span></td>
+              <td>LeRF đã học vẽ Origin, Front, Left, Up lên ảnh. Không nên chỉ làm lại y hệt việc vẽ trục.</td>
+            </tr>
+            <tr>
+              <td><strong>Kiểm tra thiên kiến đáp án (Option Bias)</strong></td>
+              <td>Spatial Lexical Bias (2026), 3DSR (FlipEval)</td>
+              <td><span class="status-check" style="color: var(--amber);">ĐÃ CÓ</span></td>
+              <td>Nhưng các bài này chủ động bỏ qua bài test đổi góc nhìn. Ta có thể kiểm tra xem bias đáp án có làm model lười xoay góc nhìn hay không.</td>
+            </tr>
+            <tr style="background: rgba(16, 185, 129, 0.08); border-left: 4px solid var(--emerald);">
+              <td><strong style="color: var(--emerald);">Định vị Pose mơ hồ (Head/Body Ambiguity) + Nhiều giả thuyết (Multi-hypothesis) + Đúng chuẩn nhãn SpatialMQA</strong></td>
+              <td><strong>CHƯA CÓ CÔNG TRÌNH NÀO GIẢI QUYẾT TRỌN VẸN</strong></td>
+              <td><span class="status-check" style="color: var(--emerald); font-weight: 800;">KHOẢNG TRỐNG SÁNG GIÁ!</span></td>
+              <td><strong>ĐÂY LÀ RESEARCH GAP CỦA CHÚNG TA:</strong> Thay vì giả định người có một góc quay cứng nhắc duy nhất, ta mô hình hóa <strong>phân phối đa giả thuyết về hướng nhìn kèm độ tin cậy</strong> để giải quyết các trường hợp đầu quay một nơi, thân quay một nẻo trong ảnh tự nhiên.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 5: Đề xuất Thực nghiệm & RQ -->
+    <div id="tab-pipeline" class="tab-content">
+      <div class="sec-header">
+        <h2 class="sec-title">🚀 Đề xuất Câu hỏi Nghiên cứu (RQ) & 3 Giả thuyết Khoa học</h2>
+        <p class="sec-desc">
+          Được đúc kết từ Mục 6 & 7 của tài liệu khảo cứu, sẵn sàng đưa vào đề cương nghiên cứu hoặc mở rộng bài báo:
+        </p>
+      </div>
+
+      <div class="alert-box" style="border-left-color: var(--cyan); background: rgba(56, 189, 248, 0.08);">
+        <strong style="color: var(--cyan); font-size: 1.1rem;">Câu hỏi Nghiên cứu Trọng tâm (Primary RQ):</strong>
+        <p style="margin-top: 0.5rem; font-size: 1.05rem; color: #fff;">
+          <em>"Trong bài toán hỏi-đáp không gian theo góc nhìn người trong ảnh đơn (Single-image Human-perspective QA), khi đáp án theo góc nhìn camera và góc nhìn của người mâu thuẫn nhau, <strong>phần lỗi nào thực sự đến từ việc định vị người (Grounding), phần nào do không chắc chắn về hướng nhìn (Orientation Uncertainty), phần nào do suy luận tọa độ (Coordinate Reasoning), và phần nào do thiên kiến chọn đáp án (Answer Bias)?</strong> Liệu việc biểu diễn nhiều giả thuyết hướng nhìn kèm độ tin cậy có giúp cải thiện độ chính xác và tính bền vững so với một hệ quy chiếu đơn lẻ hay không?"</em>
+        </p>
+      </div>
+
+      <div class="hypo-grid">
+        <div class="hypo-card">
+          <span class="hypo-badge h1-badge">Giả thuyết H1</span>
+          <h4 class="hypo-title">Lỗi chính nằm ở việc nhận thức Hướng nhìn (Heading Perception)</h4>
+          <p class="hypo-item"><strong>Phương pháp kiểm chứng:</strong> Cấp góc nhìn hoàn hảo (Oracle Heading / Head-Body ground-truth), giữ nguyên các thành phần khác.</p>
+          <p class="hypo-item" style="color: var(--rose);"><strong>Bác bỏ nếu:</strong> Khi đã cấp góc nhìn đúng 100% mà điểm số vẫn thấp $\rightarrow$ chứng tỏ lỗi nằm ở khâu suy luận logic của LLM chứ không phải do nhận diện hướng.</p>
+        </div>
+
+        <div class="hypo-card">
+          <span class="hypo-badge h2-badge">Giả thuyết H2</span>
+          <h4 class="hypo-title">Model luôn lười biếng mặc định theo Góc nhìn Camera (Camera Default)</h4>
+          <p class="hypo-item"><strong>Phương pháp kiểm chứng:</strong> Chỉ chấm điểm trên các cặp câu hỏi mà góc nhìn camera và góc nhìn của người cho ra hai đáp án đối nghịch nhau (Conflict Cases).</p>
+          <p class="hypo-item" style="color: var(--rose);"><strong>Bác bỏ nếu:</strong> Các câu trả lời sai không tập trung vào nhãn của camera mà phân tán ngẫu nhiên.</p>
+        </div>
+
+        <div class="hypo-card">
+          <span class="hypo-badge h3-badge">Giả thuyết H3</span>
+          <h4 class="hypo-title">Mô hình hóa Đa giả thuyết (Multi-hypothesis Pose) có lợi</h4>
+          <p class="hypo-item"><strong>Phương pháp kiểm chứng:</strong> So sánh đối đầu giữa Pipeline đoán 1 góc nhìn duy nhất vs Pipeline sinh nhiều giả thuyết hướng nhìn kèm phân phối xác suất.</p>
+          <p class="hypo-item" style="color: var(--rose);"><strong>Bác bỏ nếu:</strong> Đa giả thuyết không làm tăng độ chính xác hoặc chỉ đúng trên tập huấn luyện mà rớt đài trên ảnh người lạ.</p>
+        </div>
+      </div>
+
+      <div class="sec-header" style="margin-top: 3rem;">
+        <h3 style="font-size: 1.4rem; color: #fff; font-weight: 700; margin-bottom: 0.5rem;">Pipeline Thử nghiệm Đề xuất 5 Bước:</h3>
+      </div>
+
+      <div class="pipeline-container">
+        <div class="pipeline-step">
+          <div class="step-badge">01</div>
+          <div class="step-content">
+            <h4>Định vị Người & Vật thể (Observer/Target Grounding)</h4>
+            <p>Xác định chính xác vị trí của người quan sát được chỉ định và các vật thể liên quan, trả về độ tin cậy định vị (Localization Confidence).</p>
+          </div>
+        </div>
+
+        <div class="pipeline-step">
+          <div class="step-badge">02</div>
+          <div class="step-content">
+            <h4>Ước lượng Hướng Đầu & Thân Đa giả thuyết (Multi-hypothesis Heading Estimation)</h4>
+            <p>Thay vì chỉ gán 1 góc quay cứng, xuất ra phân phối các hướng có thể có của đầu và thân (Head vs Torso orientation) kèm trọng số xác suất.</p>
+          </div>
+        </div>
+
+        <div class="pipeline-step">
+          <div class="step-badge">03</div>
+          <div class="step-content">
+            <h4>Ước lượng Hình học Cục bộ (Local Geometry Estimation)</h4>
+            <p>Trích xuất khoảng cách và vị trí không gian tương đối thông qua Depth Anything V2; chỉ cần tính toán vừa đủ cho cặp vật thể được hỏi, không cần tái dựng toàn cảnh 3D nặng nề.</p>
+          </div>
+        </div>
+
+        <div class="pipeline-step">
+          <div class="step-badge">04</div>
+          <div class="step-content">
+            <h4>Biến đổi Tọa độ Giải tích theo từng Giả thuyết (Analytical Coordinate Transformation)</h4>
+            <p>Áp dụng đúng quy tắc gán nhãn 6 quan hệ chính thức của SpatialMQA cho từng giả thuyết hệ quy chiếu: $P_{\text{obj}} = R \cdot (P_{\text{target}} - P_{\text{observer}})$.</p>
+          </div>
+        </div>
+
+        <div class="pipeline-step">
+          <div class="step-badge">05</div>
+          <div class="step-content">
+            <h4>Tổng hợp Phân phối Xác suất & Chống Thiên kiến Đáp án (Ensemble & Debias)</h4>
+            <p>Hợp nhất các kết quả dự đoán với chuỗi tư duy Spatial-CoT của LLaVA, đồng thời kiểm tra đảo thứ tự đáp án (Permutation check) để triệt tiêu thiên kiến học vẹt.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Priority Reading List -->
+      <div class="alert-box" style="border-left-color: var(--purple); background: rgba(168, 85, 247, 0.08);">
+        <strong style="color: var(--purple); font-size: 1.1rem;">Thứ tự Đọc Ưu tiên Cao nhất để Chốt Novelty:</strong>
+        <p style="margin-top: 0.5rem; font-size: 1rem; color: #fff;">
+          <strong>SpatialMQA (P01)</strong> $\rightarrow$ <strong>ViewSpatial (P18)</strong> $\rightarrow$ <strong>APC (P24)</strong> $\rightarrow$ <strong>SpatialReasoner (P13)</strong> $\rightarrow$ <strong>LeRF (P23)</strong>.
+        </p>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 0.35rem;">
+          Đọc kỹ 5 bài này trước tiên để hiểu đối thủ sát sườn nhất của mình đã làm đến đâu, từ đó không bao giờ bị rơi vào bẫy làm lại những gì người khác đã công bố.
+        </p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <p>Bản tổng hợp Khoa học SpatialMQA • Phân tích Chuyên sâu từ Corpus 27 Bài báo • 2026</p>
+    </footer>
+  </div>
+
+  <script>
+    // Tab Switching Logic
+    const navBtns = document.querySelectorAll('.nav-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    navBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        navBtns.forEach(b => b.classList.remove('active'));
+        tabContents.forEach(tc => tc.classList.remove('active'));
+
+        btn.classList.add('active');
+        const targetTab = document.getElementById(btn.dataset.tab);
+        if (targetTab) {
+          targetTab.classList.add('active');
+        }
+      });
+    });
+
+    // 27 Papers Table Search & Filter
+    const filterChips = document.querySelectorAll('.filter-chip');
+    const searchInput = document.getElementById('pSearch');
+    const tableRows = document.querySelectorAll('#tbl27 tbody tr');
+
+    function filter27Table() {
+      const activeFilter = document.querySelector('.filter-chip.active').dataset.f;
+      const query = searchInput.value.toLowerCase();
+
+      tableRows.forEach(row => {
+        const cat = row.dataset.c;
+        const text = row.textContent.toLowerCase();
+        const matchesCat = (activeFilter === 'all') || (cat === activeFilter);
+        const matchesSearch = text.includes(query);
+
+        if (matchesCat && matchesSearch) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    filterChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        filterChips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        filter27Table();
+      });
+    });
+
+    searchInput.addEventListener('input', filter27Table);
+  </script>
+</body>
+</html>
