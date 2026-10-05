@@ -37,13 +37,12 @@ Ensure the formatted training dataset is generated:
 python src/data/format_llava.py
 ```
 
-### Download COCO2017 Test Images:
-The paper uses images from COCO2017 test set (`http://images.cocodataset.org/test2017/`):
+### Download Images (Fast & Recommended - Only 5,063 Images, ~800MB):
+Do **NOT** download the full 6.2GB `test2017.zip` from COCO website (heavily throttled to <100 KB/s).
+Download only the exact 5,063 images required by SpatialMQA directly from Hugging Face CDN (takes ~1-2 minutes):
 ```bash
-# Option A: Download full COCO test2017 (recommended for cluster)
-mkdir -p data/COCO2017 && cd data/COCO2017
-wget http://images.cocodataset.org/zips/test2017.zip
-unzip -q test2017.zip && cd ../..
+python scripts/download_images.py
+# Images will be saved directly into: data/spatial_mqa/images/
 ```
 
 ---
@@ -55,7 +54,7 @@ unzip -q test2017.zip && cd ../..
 bash scripts/train_llava_lora.sh \
     liuhaotian/llava-v1.5-7b \
     data/spatial_mqa/train_3780.json \
-    data/COCO2017/test2017 \
+    data/spatial_mqa/images \
     experiments/checkpoints/llava_1.5_7b_lora \
     0
 ```
@@ -65,7 +64,7 @@ bash scripts/train_llava_lora.sh \
 bash scripts/train_spacellava_lora.sh \
     remyxai/SpaceLLaVA \
     data/spatial_mqa/train_3780.json \
-    data/COCO2017/test2017 \
+    data/spatial_mqa/images \
     experiments/checkpoints/spacellava_lora \
     0
 ```
@@ -90,7 +89,7 @@ python scripts/run_eval.py \
     --model_path liuhaotian/llava-v1.5-7b \
     --lora_path experiments/checkpoints/llava_1.5_7b_lora \
     --test_jsonl data/spatial_mqa/test.jsonl \
-    --image_dir data/COCO2017/test2017 \
+    --image_dir data/spatial_mqa/images \
     --output_jsonl experiments/predictions/llava_lora_test_preds.jsonl
 ```
 
@@ -100,7 +99,7 @@ python scripts/run_eval.py \
     --model_path remyxai/SpaceLLaVA \
     --lora_path experiments/checkpoints/spacellava_lora \
     --test_jsonl data/spatial_mqa/test.jsonl \
-    --image_dir data/COCO2017/test2017 \
+    --image_dir data/spatial_mqa/images \
     --output_jsonl experiments/predictions/spacellava_lora_test_preds.jsonl
 ```
 
