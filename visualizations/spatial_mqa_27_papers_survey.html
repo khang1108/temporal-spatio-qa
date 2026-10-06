@@ -7,6 +7,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- KaTeX CSS & JS for beautiful academic math rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});"></script>
   <style>
     :root {
       --bg-dark: #07090e;
@@ -498,6 +502,15 @@
       <p class="subtitle">
         Bản trực quan hóa giải mã toàn diện khảo cứu 27+ paper: Tách bạch rõ 3 tầng khoảng trống học thuật, bóc trần những điều <em>đã được làm rồi (Prior Art)</em>, điều chỉnh định vị khoa học, và định hình <strong>Research Gap có thể kiểm chứng bằng thực nghiệm</strong>.
       </p>
+
+      <div style="display: flex; justify-content: center; gap: 1rem; margin-bottom: 2.25rem; flex-wrap: wrap;">
+        <a href="spatial_mqa_peer_review_dashboard.html" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1.1rem; border-radius: 10px; font-size: 0.9rem; font-weight: 600; text-decoration: none; background: rgba(168, 85, 247, 0.15); border: 1px solid var(--purple); color: #c084fc;">
+          <span>⚖️ Xem Bản Phản biện Học thuật & Hiệu chỉnh Thiết kế (Peer Review)</span>
+        </a>
+        <a href="spatial_mllm_survey_limitations.html" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1.1rem; border-radius: 10px; font-size: 0.9rem; font-weight: 600; text-decoration: none; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-subtle); color: var(--text-main);">
+          <span>🔬 Mô phỏng Depth Fallacy</span>
+        </a>
+      </div>
     </header>
 
     <!-- Navigation Tabs -->

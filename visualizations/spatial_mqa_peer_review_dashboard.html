@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bản Phản biện Học thuật & Hiệu chỉnh Thiết kế Nghiên cứu: SpatialMQA & Diagnostic Interventions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- KaTeX CSS & JS for beautiful academic math rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});"></script>
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --bg-card: rgba(18, 24, 38, 0.85);
+      --bg-card-hover: rgba(26, 36, 56, 0.98);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(56, 189, 248, 0.4);
+      
+      --cyan: #38bdf8;
+      --cyan-glow: rgba(56, 189, 248, 0.25);
+      --emerald: #10b981;
+      --emerald-glow: rgba(16, 185, 129, 0.25);
+      --amber: #f59e0b;
+      --amber-glow: rgba(245, 158, 11, 0.25);
+      --rose: #f43f5e;
+      --rose-glow: rgba(244, 63, 94, 0.25);
+      --purple: #a855f7;
+      --purple-glow: rgba(168, 85, 247, 0.25);
+      --indigo: #6366f1;
+      
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      line-height: 1.68;
+      background-image: 
+        radial-gradient(circle at 15% 10%, rgba(56, 189, 248, 0.09) 0%, transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
+      min-height: 100vh;
+      padding: 2.5rem 1.5rem 6rem 1.5rem;
+    }
+
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 2.75rem;
+      position: relative;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1.2rem;
+      background: rgba(168, 85, 247, 0.12);
+      border: 1px solid rgba(168, 85, 247, 0.35);
+      border-radius: 9999px;
+      color: var(--purple);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 1.25rem;
+    }
+
+    h1 {
+      font-size: clamp(2.1rem, 3.6vw, 3.1rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.22;
+      background: linear-gradient(135deg, #ffffff 15%, #38bdf8 55%, #c084fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1.25rem;
+    }
+
+    .subtitle {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      max-width: 1020px;
+      margin: 0 auto 2.25rem auto;
+    }
+
+    /* Link bar to sister visualizer */
+    .link-bar {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+      flex-wrap: wrap;
+    }
+
+    .action-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1.1rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.25s ease;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+    }
+
+    .action-link:hover {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--cyan);
+      color: var(--cyan);
+      transform: translateY(-2px);
+    }
+
+    /* Navigation Bar */
+    .nav-bar {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 3rem;
+      flex-wrap: wrap;
+      background: rgba(18, 24, 38, 0.7);
+      padding: 0.5rem;
+      border-radius: 16px;
+      border: 1px solid var(--border-subtle);
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 0.65rem 1.15rem;
+      border-radius: 12px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .nav-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .nav-btn.active {
+      background: rgba(168, 85, 247, 0.15);
+      border-color: var(--purple);
+      color: var(--purple);
+      box-shadow: 0 0 20px var(--purple-glow);
+    }
+
+    /* Tab Panes */
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.35s ease;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Section Headers */
+    .sec-header {
+      margin-bottom: 2rem;
+    }
+
+    .sec-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+
+    .sec-desc {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      max-width: 1040px;
+    }
+
+    /* Cards Grid */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .glass-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      padding: 1.75rem;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .glass-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--border-glow);
+      box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Alerts */
+    .alert-box {
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-left: 4px solid var(--amber);
+      border-radius: 14px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 2.5rem;
+      color: #cbd5e1;
+    }
+
+    .alert-box strong {
+      color: var(--amber);
+    }
+
+    .alert-box.danger {
+      background: rgba(244, 63, 94, 0.08);
+      border-color: rgba(244, 63, 94, 0.3);
+      border-left-color: var(--rose);
+    }
+
+    .alert-box.danger strong {
+      color: var(--rose);
+    }
+
+    .alert-box.success {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.3);
+      border-left-color: var(--emerald);
+    }
+
+    .alert-box.success strong {
+      color: var(--emerald);
+    }
+
+    .alert-box.info {
+      background: rgba(56, 189, 248, 0.08);
+      border-color: rgba(56, 189, 248, 0.3);
+      border-left-color: var(--cyan);
+    }
+
+    .alert-box.info strong {
+      color: var(--cyan);
+    }
+
+    /* Table Styles */
+    .table-wrapper {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      overflow: hidden;
+      margin-bottom: 3rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.92rem;
+    }
+
+    th {
+      padding: 1rem 1.25rem;
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.76rem;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    td {
+      padding: 1.15rem 1.25rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      vertical-align: top;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .pill-badge {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      margin-bottom: 0.25rem;
+    }
+
+    .badge-error { background: rgba(244, 63, 94, 0.2); color: var(--rose); border: 1px solid rgba(244, 63, 94, 0.35); }
+    .badge-fix { background: rgba(16, 185, 129, 0.2); color: var(--emerald); border: 1px solid rgba(16, 185, 129, 0.35); }
+    .badge-hypo { background: rgba(56, 189, 248, 0.2); color: var(--cyan); border: 1px solid rgba(56, 189, 248, 0.35); }
+
+    /* Diff View Boxes */
+    .diff-box {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 900px) {
+      .diff-box { grid-template-columns: 1fr; }
+    }
+
+    .diff-col {
+      border-radius: 14px;
+      padding: 1.25rem 1.5rem;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .diff-col.wrong {
+      background: rgba(244, 63, 94, 0.05);
+      border-color: rgba(244, 63, 94, 0.3);
+    }
+
+    .diff-col.correct {
+      background: rgba(16, 185, 129, 0.05);
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .diff-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .diff-col.wrong .diff-title { color: var(--rose); }
+    .diff-col.correct .diff-title { color: var(--emerald); }
+
+    /* Math Formula Block */
+    .math-block {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin: 1.25rem 0;
+      text-align: center;
+      color: #e2e8f0;
+      font-size: 1.05rem;
+      overflow-x: auto;
+    }
+
+    /* Roadmap Timeline */
+    .roadmap-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .roadmap-item {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 1.5rem;
+      gap: 1.5rem;
+      align-items: center;
+      transition: all 0.25s ease;
+    }
+
+    .roadmap-item:hover {
+      border-color: var(--cyan);
+      transform: translateX(4px);
+    }
+
+    .phase-badge {
+      font-size: 1.2rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--cyan);
+      text-align: center;
+      padding: 0.5rem;
+      background: rgba(56, 189, 248, 0.1);
+      border-radius: 10px;
+      border: 1px solid rgba(56, 189, 248, 0.25);
+    }
+
+    .phase-content h4 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.35rem;
+    }
+
+    .phase-content p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 5rem;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="badge-pill">
+        <span>⚖️ Academic Peer-Review Report • 05/10/2026</span>
+      </div>
+      <h1>Bản Phản biện Học thuật & Hiệu chỉnh Thiết kế</h1>
+      <p class="subtitle">
+        Báo cáo đánh giá độc lập về bằng chứng thực nghiệm, ranh giới tính mới và thiết kế can thiệp chẩn đoán (Diagnostic Interventions) cho đề tài <strong>SpatialMQA & Suy luận Không gian theo Góc nhìn Chủ thể</strong>.
+      </p>
+
+      <div class="link-bar">
+        <a href="spatial_mqa_27_papers_survey.html" class="action-link">
+          <span>📚 Xem Dashboard 27+ Paper</span>
+        </a>
+        <a href="spatial_mllm_survey_limitations.html" class="action-link">
+          <span>🔬 Xem Mô phỏng Hình học Depth Fallacy</span>
+        </a>
+        <a href="baselines_workflow.html" class="action-link">
+          <span>⚙️ Xem Quy trình LoRA LLaVA / SpaceLLaVA</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-bar">
+      <button class="nav-btn active" data-tab="tab-verdict">🎯 1. Kết luận Đánh giá & 6 Hướng</button>
+      <button class="nav-btn" data-tab="tab-evidence">🔍 2. Rà soát 9 Điểm Bằng chứng Paper</button>
+      <button class="nav-btn" data-tab="tab-critique">⚖️ 3. Phản biện Trọng tâm "Single-heading"</button>
+      <button class="nav-btn" data-tab="tab-design">🛠️ 4. Hiệu chỉnh Thiết kế Thí nghiệm</button>
+      <button class="nav-btn" data-tab="tab-hypotheses">🚀 5. RQ & 4 Giả thuyết Khả bác</button>
+      <button class="nav-btn" data-tab="tab-checklist">📋 6. Đối chiếu 15 Chỉnh sửa & Manifest PDF</button>
+    </nav>
+
+    <!-- TAB 1: Kết luận Đánh giá & 6 Hướng -->
+    <div id="tab-verdict" class="tab-content active">
+      <div class="sec-header">
+        <h2 class="sec-title">🎯 Đánh giá Tổng quan từ Ban Phản biện</h2>
+        <p class="sec-desc">
+          Bản phản biện đồng tình với định hướng nghiên cứu lớn nhưng yêu cầu chuẩn hóa các phát ngôn khoa học, tránh suy diễn nhân quả khi chỉ có tương quan thực nghiệm.
+        </p>
+      </div>
+
+      <div class="alert-box success">
+        <strong>ĐỒNG TÌNH KHOA HỌC:</strong>
+        <p style="margin-top: 0.4rem;">
+          Lựa chọn bài toán <strong>Hỏi-đáp không gian theo góc nhìn người trong ảnh (Human-perspective answering)</strong> và sử dụng phương pháp <strong>Can thiệp có kiểm soát (Controlled Diagnostic Interventions)</strong> là hoàn toàn chính xác, có giá trị học thuật cao và tiếp cận đúng bản chất bài toán.
+        </p>
+      </div>
+
+      <div class="alert-box danger">
+        <strong>CHƯA ĐỒNG TÌNH / CẦN HIỆU CHỈNH:</strong>
+        <p style="margin-top: 0.4rem;">
+          Tuyệt đối không được coi việc <em>"cam kết sớm vào một heading đơn lẻ (single-heading commitment) là nút thắt cổ chai lớn nhất đã được xác lập từ tài liệu"</em>. Trong literature, <strong>đây là GIẢ THUYẾT ĐỂ KIỂM CHỨNG</strong>. Thiết kế thực nghiệm phải khách quan, cho phép kết quả chỉ ra rằng định vị chủ thể (Grounding), quy ước hệ trục (Frame convention), hình học (Geometry) hoặc thiên kiến đáp án (Answer bias) mới là yếu tố chi phối lớn hơn.
+        </p>
+      </div>
+
+      <!-- Bảng 6 Hướng Nghiên Cứu Đánh Giá -->
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 260px;">Hướng Nghiên Cứu</th>
+              <th style="width: 170px;">Đánh Giá Của Reviewer</th>
+              <th>Điều Kiện Tiên Quyết Để Trở Thành Đóng Góp Thuyết Phục</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Oracle Grounding / Heading / Geometry</strong></td>
+              <td><span class="pill-badge badge-fix">NÊN LÀM TRƯỚC</span></td>
+              <td>Thay từng biến trong <strong>cùng định dạng payload</strong>, đo cả tương tác đa nhân tố (interactions). Tuyệt đối không gọi toàn bộ gain của oracle là tỷ lệ phần trăm lỗi do module đó gây ra.</td>
+            </tr>
+            <tr>
+              <td><strong>Head–Torso Ambiguity</strong></td>
+              <td><span class="pill-badge badge-fix">ĐÁNG LÀM, CÓ NỀN TẢNG</span></td>
+              <td>Cần có tập gán nhãn kiểm chứng độc lập; tách bạch giữa câu hỏi mơ hồ ngữ nghĩa (không nói rõ hỏi theo đầu hay thân) với sai số ước lượng pose.</td>
+            </tr>
+            <tr>
+              <td><strong>Chẩn đoán Camera-frame Intrusion</strong></td>
+              <td><span class="pill-badge badge-fix">ĐÁNG LÀM</span></td>
+              <td>Chỉ đo trên các ca mâu thuẫn góc nhìn (Frame-conflict cases), so sánh với baseline answer prior và camera-only. Tránh quy kết cảm tính là model “luôn lười biếng”.</td>
+            </tr>
+            <tr>
+              <td><strong>Phép biến đổi Tọa độ Giải tích ($T_{\text{cam}\rightarrow\text{obj}}$)</strong></td>
+              <td><span class="pill-badge badge-hypo">BASELINE CẦN THIẾT (TÍNH MỚI THẤP)</span></td>
+              <td>Quy ước trục, gốc tọa độ (origin), trọng lực và hàm gán nhãn phải tuyệt đối chuẩn xác theo SpatialMQA Table 2; cần ground truth hoặc dữ liệu kiểm soát hình học.</td>
+            </tr>
+            <tr>
+              <td><strong>Single vs. Distribution of Headings</strong></td>
+              <td><span class="pill-badge badge-hypo">GIẢ THUYẾT TIỀM NĂNG (CHƯA ĐỦ BẰNG CHỨNG)</span></td>
+              <td>Phân phối hậu nghiệm (Posterior) phải được hiệu chuẩn (calibrated); so sánh công bằng về thông tin và chi phí tính toán (matched compute/budget); chứng minh lợi ích không chỉ đơn giản do ensemble.</td>
+            </tr>
+            <tr>
+              <td><strong>Spatial-CoT + Permutation</strong></td>
+              <td><span class="pill-badge badge-fix">KIỂM SOÁT BỔ TRỢ</span></td>
+              <td>Không ngộ nhận văn bản tự thuật của CoT là bằng chứng phản ánh đúng trạng thái suy luận nội tại; phép hoán vị đáp án chưa loại bỏ được toàn bộ thiên kiến từ vựng (lexical bias).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 2: Rà soát 9 Điểm Bằng chứng Paper -->
+    <div id="tab-evidence" class="tab-content">
+      <div class="sec-header">
+        <h2 class="sec-title">🔍 Rà soát 9 Điểm Cần Hiệu chỉnh Theo Bằng chứng Paper</h2>
+        <p class="sec-desc">
+          Đối chiếu trực tiếp từng phát biểu trong bản khảo cứu cũ với sự thật thực nghiệm trong full text của các bài báo gốc:
+        </p>
+      </div>
+
+      <!-- Item 1: P27 -->
+      <div class="glass-card" style="margin-bottom: 2rem;">
+        <h3 style="color: var(--cyan); margin-bottom: 0.75rem;">1. P27 (Spatial Lexical Bias): Con số +32.6% Bị Gán Nhầm Cơ Chế</h3>
+        <div class="diff-box">
+          <div class="diff-col wrong">
+            <div class="diff-title">❌ Phát biểu cũ trong khảo cứu</div>
+            <p style="font-size: 0.92rem; color: #fca5a5;">
+              <em>"can thiệp kích hoạt (activation intervention) tăng +32.6%."</em>
+            </p>
+          </div>
+          <div class="diff-col correct">
+            <div class="diff-title">✅ Sự thật học thuật trong Paper [P27 v1/v2]</div>
+            <p style="font-size: 0.92rem; color: #86efac;">
+              Trong paper, phần sửa chữa bằng <strong>LoRA DPO trên Language Model (với Vision Encoder & Projector đóng băng hoàn toàn)</strong> mới là nơi báo cáo mức tăng tối đa <strong>+32.6 điểm phần trăm robust accuracy</strong>. Probing và activation intervention là nhánh thí nghiệm chẩn đoán riêng! Ngoài ra, tập <em>SpatialMQA-Direct</em> của họ đã loại bỏ perspective substitution và chỉ giữ 4 nhãn.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Item 2: SpatialReasoner -->
+      <div class="glass-card" style="margin-bottom: 2rem;">
+        <h3 style="color: var(--cyan); margin-bottom: 0.75rem;">2. SpatialReasoner: 31.0% vs. 52.5% Không Phải Phân Rã Nhân Quả</h3>
+        <div class="diff-box">
+          <div class="diff-col wrong">
+            <div class="diff-title">❌ Phát biểu cũ trong khảo cứu</div>
+            <p style="font-size: 0.92rem; color: #fca5a5;">
+              <em>"Định lượng bóc tách 3D Perception (31.0%) vs 3D Reasoning (52.5%), lỗi chủ yếu do perception."</em>
+            </p>
+          </div>
+          <div class="diff-col correct">
+            <div class="diff-title">✅ Sự thật học thuật trong SpatialReasoner [§4.4, Table 6]</div>
+            <p style="font-size: 0.92rem; color: #86efac;">
+              Bảng 6 báo cáo <strong>độ chính xác dự đoán góc quay (orientation prediction)</strong> và <strong>độ chính xác suy luận góc (angle reasoning)</strong> dưới ngưỡng sai số $30^\circ$. Chúng là 2 chỉ số của 2 tác vụ khác nhau, <strong>không tạo thành phép cộng phân rã nhân quả</strong> cho câu hỏi Q2 hay single heading!
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Item 3: CRISP -->
+      <div class="glass-card" style="margin-bottom: 2rem;">
+        <h3 style="color: var(--cyan); margin-bottom: 0.75rem;">3. CRISP: Đã Có Oracle Diagnosis Nhưng Chưa Chứng Minh "Cơ Chế Nội Tại"</h3>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+          CRISP đã dùng cấu trúc 3D và oracle để phân biệt bottleneck perception vs reasoning $\rightarrow$ Do đó ta không thể tuyên bố là người <em>"đầu tiên chẩn đoán perception vs reasoning"</em>. Tuy nhiên, scene graph mà model xuất ra là biểu diễn bên ngoài (externalized), tác giả CRISP cũng thận trọng gọi đó là <strong>hội chứng hành vi (behavioral syndromes)</strong> chứ chưa khẳng định cơ chế thần kinh nội tại.
+        </p>
+      </div>
+
+      <!-- Item 4: Cognitively-Inspired Tokens -->
+      <div class="glass-card" style="margin-bottom: 2rem;">
+        <h3 style="color: var(--cyan); margin-bottom: 0.75rem;">4. Cognitively-Inspired Tokens: Thêm Orientation Vào LLaVA-1.5 Đã Được Làm!</h3>
+        <div class="diff-box">
+          <div class="diff-col wrong">
+            <div class="diff-title">❌ Nhận định ngây thơ</div>
+            <p style="font-size: 0.92rem; color: #fca5a5;">
+              <em>"Mô hình LLaVA chưa hề có biểu diễn góc quay, thêm visual tokens về hướng sẽ luôn chiến thắng văn bản."</em>
+            </p>
+          </div>
+          <div class="diff-col correct">
+            <div class="diff-title">✅ Sự thật trong Tokens Paper [Table 1]</div>
+            <p style="font-size: 0.92rem; color: #86efac;">
+              Paper đã thêm embodiment/rotation tokens vào chính <strong>LLaVA-1.5-13B</strong>! Nhưng Bảng 1 chỉ ra: <strong>Cấp thông tin dưới dạng văn bản (text control) đạt COCO 84 điểm, cao hơn dạng token (79 điểm)!</strong> Do đó ta không thể giả định token luôn hơn text. Muốn đề xuất uncertainty, ta phải chứng minh vượt cả single token lẫn matched text control.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Item 5: Longo et al. Cognition 2020 -->
+      <div class="glass-card" style="margin-bottom: 2rem;">
+        <h3 style="color: var(--cyan); margin-bottom: 0.75rem;">5. Longo et al. (Cognition 2020): Bằng Chứng Hành Vi, Không Phải Đo Thần Kinh</h3>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+          Nghiên cứu của Longo đo phán đoán Left/Right khi đầu và thân người bị xoay lệch góc. Đây là <strong>bằng chứng tâm vật lý học / hành vi (psychophysics / behavioral evidence)</strong> ở con người, không phải phép đo điện não/thần kinh trực tiếp, và càng không phải trên MLLM. Phải sửa cách gọi thành <em>"Bằng chứng hành vi về ảnh hưởng của cả đầu và thân lên phán đoán góc nhìn"</em>.
+        </p>
+      </div>
+
+      <!-- Item 6-9: Beyond Recognition, LeRF, IPT, Thận trọng kết luận -->
+      <div class="cards-grid">
+        <div class="glass-card">
+          <h4 style="color: var(--amber); margin-bottom: 0.5rem;">6. Beyond Recognition</h4>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">
+            Oracle facing direction chỉ được thử trên <strong>Q6 (Level-1 visibility: vật có nằm trong tầm mắt không)</strong>. Cải thiện hạn chế ở Q6 không đồng nghĩa oracle heading không giúp gì cho Q2 directional relations!
+          </p>
+        </div>
+
+        <div class="glass-card">
+          <h4 style="color: var(--amber); margin-bottom: 0.5rem;">7. LeRF</h4>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">
+            Appendix D.2 đã phân 3 nhánh lỗi: Grounding sai, dựng Frame sai, Reasoning downstream sai. Phân loại này đã có người làm, đề tài của ta không thể lấy taxonomy này làm đóng góp chính.
+          </p>
+        </div>
+
+        <div class="glass-card">
+          <h4 style="color: var(--amber); margin-bottom: 0.5rem;">8. IPT (Imaginative Tokens)</h4>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">
+            Không bắt buộc model phải vẽ ảnh trung gian trước mọi câu trả lời. Cần tách rõ: <em>Giám sát khi huấn luyện (Training supervision)</em>, <em>Biểu diễn ẩn (Latent state)</em>, và <em>Sinh output khi suy luận (Inference mode)</em>.
+          </p>
+        </div>
+
+        <div class="glass-card">
+          <h4 style="color: var(--amber); margin-bottom: 0.5rem;">9. Thận trọng với Tuyên bố Phủ định</h4>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">
+            Một bài báo <em>"không đánh giá góc nhìn người"</em> không có nghĩa mô hình của họ <em>"không có năng lực"</em>. Phải viết chính xác: <em>"Paper không đánh giá trực tiếp trên human perspective..."</em>.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: Phản biện Trọng tâm "Single-heading" -->
+    <div id="tab-critique" class="tab-content">
+      <div class="sec-header">
+        <h2 class="sec-title">⚖️ Phản biện Trọng tâm: "Single-heading là Bottleneck Lớn Nhất?"</h2>
+        <p class="sec-desc">
+          Bốn lỗ hổng logic mà reviewer sẽ chất vấn nếu chúng ta khẳng định điều này trước khi chạy thực nghiệm:
+        </p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="glass-card">
+          <div style="color: var(--rose); font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;">01</div>
+          <h4 style="color: #fff; margin-bottom: 0.5rem;">Với End-to-end MLLM, ta chưa quan sát được bước "Commitment" đó</h4>
+          <p style="color: var(--text-muted); font-size: 0.93rem;">
+            Ở pipeline rời rạc (Modular pipeline), ta thấy rõ model xuất ra một số duy nhất $\theta = 45^\circ$. Nhưng với LLaVA-1.5 trả lời trực tiếp từ ảnh sang chữ, biểu diễn nội tại có thể chứa nhiều tín hiệu phân tán hoặc model dùng shortcut khác. CoT tự thuật <em>"người nhìn sang trái"</em> chưa chứng minh đó là biến nhân quả dẫn đến câu trả lời.
+          </p>
+        </div>
+
+        <div class="glass-card">
+          <div style="color: var(--rose); font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;">02</div>
+          <h4 style="color: #fff; margin-bottom: 0.5rem;">Nhạy gần Boundary là tính chất đúng đắn của Toán học</h4>
+          <p style="color: var(--text-muted); font-size: 0.93rem;">
+            Khi một vật thể nằm ở góc $45^\circ$ ranh giới giữa Trước và Phải, một bộ giải hoàn hảo (Oracle Solver) khi góc người thay đổi thật cũng BẮT BUỘC phải đổi nhãn! Việc model đổi nhãn liên tục gần boundary có thể chỉ phản ánh đúng bản chất hình học, chưa phải bằng chứng model "bị giòn" (brittle).
+          </p>
+        </div>
+
+        <div class="glass-card">
+          <div style="color: var(--rose); font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;">03</div>
+          <h4 style="color: #fff; margin-bottom: 0.5rem;">Cấp Oracle vẫn sai $\ne$ Heading không phải nguồn lỗi lớn nhất</h4>
+          <p style="color: var(--text-muted); font-size: 0.93rem;">
+            Giả sử ban đầu model đạt 20%. Khi cấp Oracle Heading, model đạt 60% (vẫn còn sai 40%). Ta không thể vội kết luận <em>"Heading không quan trọng vì vẫn sai 40%"</em>. Mức tăng +40 điểm phần trăm có thể là can thiệp có hiệu quả lớn nhất trong tất cả các module!
+          </p>
+        </div>
+
+        <div class="glass-card">
+          <div style="color: var(--rose); font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;">04</div>
+          <h4 style="color: #fff; margin-bottom: 0.5rem;">Cơ sở Toán học của Đa giả thuyết (Marginalization)</h4>
+          <p style="color: var(--text-muted); font-size: 0.93rem;">
+            Tích phân biên (Marginalization) trên phân phối góc nhìn $\theta$ và cấu trúc cảnh $Z$:
+          </p>
+          <div class="math-block">
+            $$p(Y = y \mid I, c) = \int \mathbf{1}[f(\theta, Z, c) = y] \, p(\theta, Z \mid I, c) \, d\theta \, dZ$$
+          </div>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">
+            <strong>Ví dụ phản chứng:</strong> Giả sử 3 giả thuyết heading có trọng số <code>0.40 (Trái) / 0.35 (Phải) / 0.25 (Phải)</code>. Ước lượng MAP chọn <strong>Trái</strong> (vì 0.40 cao nhất), nhưng tích phân biên quan hệ lại chọn <strong>Phải</strong> (vì $0.35 + 0.25 = 0.60 > 0.40$)!
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: Hiệu chỉnh Thiết kế Thí nghiệm -->
+    <div id="tab-design" class="tab-content">
+      <div class="sec-header">
+        <h2 class="sec-title">🛠️ Hiệu chỉnh Thiết kế Thí nghiệm Can thiệp Chuẩn mực</h2>
+        <p class="sec-desc">
+          Chuyển đổi từ pipeline 5 bước tuần tự sang <strong>Thiết kế Can thiệp Đa nhân tố (Factorial Interventions)</strong> với công thức hình học chuẩn xác:
+        </p>
+      </div>
+
+      <!-- Factorial 8 Conditions -->
+      <div class="alert-box info">
+        <strong style="color: var(--cyan); font-size: 1.1rem;">Thiết kế Factorial 8 Điều kiện (G × H × X):</strong>
+        <p style="margin-top: 0.4rem; color: #fff;">
+          Ba biến độc lập gồm: <strong>$G$ (Grounding danh tính)</strong>, <strong>$H$ (Heading hướng nhìn)</strong>, <strong>$X$ (Geometry hình học)</strong>. Mỗi biến có 2 trạng thái: <code>Predicted</code> hoặc <code>Oracle</code>, tạo thành $2^3 = 8$ điều kiện thực nghiệm:
+        </p>
+        <div class="math-block" style="background: rgba(0,0,0,0.5);">
+          $$\text{Interaction Effect: } I_{GH} = A_{GH} - A_G - A_H + A_0$$
+        </div>
+        <p style="font-size: 0.92rem; color: var(--text-muted);">
+          Nếu $I_{GH} \ne 0$, mức tăng khi cấp oracle không cộng dồn độc lập mà có tương tác phi tuyến tính!
+        </p>
+      </div>
+
+      <!-- Công thức Hệ quy chiếu Chuẩn -->
+      <div class="table-wrapper">
+        <div style="padding: 1.25rem 1.5rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border-subtle);">
+          <h4 style="color: #fff; font-size: 1.1rem;">📐 Chuẩn hóa Công thức Tọa độ Hệ quy chiếu Người quan sát:</h4>
+        </div>
+        <div style="padding: 1.5rem;">
+          <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1rem;">
+            Gọi $p$ là gốc tọa độ của người quan sát (Observer Origin), ma trận $B$ có các cột là các trục đơn vị của hệ quy chiếu người trong tọa độ camera. Tọa độ tương đối của mục tiêu ($q_t$) và vật tham chiếu ($q_o$) được tính:
+          </p>
+          <div class="math-block">
+            $$q_t = B^\top (x_t - p), \qquad q_o = B^\top (x_o - p)$$
+          </div>
+          <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.7;">
+            ⚠️ <em>Lưu ý thực nghiệm:</em><br>
+            • Khi ma trận $B$ trực giao chuẩn (orthonormal), ma trận xoay $R_{\text{cam} \rightarrow \text{person}} = B^\top$.<br>
+            • Nhãn Front/Behind trong SpatialMQA Table 2 xét <strong>độ gần gốc tọa độ (proximity to origin)</strong>, không thể chỉ dùng hiệu displacement đơn thuần $\Delta y = y_t - y_o$. Ví dụ: cặp $(y_s, y_o) = (1, 3)$ và $(-3, -1)$ đều có $y_s - y_o = -2$ nhưng vị trí trước sau so với observer là hoàn toàn khác nhau!<br>
+            • Trục trên/dưới (Above/Below) giữ cố định theo trục trọng lực Trái đất (Gravity-aligned Up).
+          </p>
+        </div>
+      </div>
+
+      <!-- Nuances về Q3 và Permutation -->
+      <div class="cards-grid">
+        <div class="glass-card">
+          <h4 style="color: var(--amber); margin-bottom: 0.5rem;">Q3: Nhỏ nhưng Không "Vô nghĩa Thống kê"</h4>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">
+            Tập test Q3 có 34 mẫu. Nếu mô hình đoán đúng 34/34, khoảng tin cậy Wilson 95% là <strong>[89.8%, 100%]</strong>! Do đó không thể dùng từ "vô nghĩa thống kê", mà phải gọi là <strong>phân tích thăm dò (Exploratory Analysis)</strong> và cần kèm theo khoảng tin cậy Confidence Intervals.
+          </p>
+        </div>
+
+        <div class="glass-card">
+          <h4 style="color: var(--amber); margin-bottom: 0.5rem;">Permutation Không Đo Được Mọi Lexical Bias</h4>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">
+            Đảo thứ tự A/B/C/D chỉ phát hiện thiên kiến vị trí (Position sensitivity). Bản thân từ ngữ (Wording của các đáp án) có thể kéo mô hình chọn nó dù ở bất kỳ vị trí nào. Cần kiểm tra cả <em>Sampled-permutation robustness</em> theo số lựa chọn (2!, 4!, 6!).
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: RQ & 4 Giả thuyết Khả bác -->
+    <div id="tab-hypotheses" class="tab-content">
+      <div class="sec-header">
+        <h2 class="sec-title">🚀 Research Question (RQ) & 4 Giả thuyết Khả bác Chuẩn mực</h2>
+        <p class="sec-desc">
+          Công thức hóa theo tiêu chuẩn phản biện khoa học cao nhất của các hội nghị AI hàng đầu:
+        </p>
+      </div>
+
+      <div class="alert-box" style="border-left-color: var(--cyan); background: rgba(56, 189, 248, 0.08);">
+        <strong style="color: var(--cyan); font-size: 1.15rem;">Câu hỏi Nghiên cứu Trọng tâm (Primary RQ):</strong>
+        <p style="margin-top: 0.5rem; font-size: 1.05rem; color: #fff; line-height: 1.7;">
+          <em>"Trong bài toán hỏi-đáp không gian theo hệ quy chiếu người (Human-reference spatial answering), việc thay thế có kiểm soát giữa định vị thực thể (Grounding), quy ước hệ quy chiếu (Frame convention), hướng nhìn (Heading) và hình học cảnh (Scene geometry) làm thay đổi độ chính xác như thế nào? Sau khi khống chế các yếu tố này, liệu việc tích phân biên trên độ bất định hướng nhìn (Marginalization over heading uncertainty) có giảm thiểu lỗi vượt trội so với ước lượng điểm duy nhất (Point estimate) dưới cùng lượng thông tin và ngân sách tính toán hay không?"</em>
+        </p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="glass-card">
+          <span class="pill-badge badge-hypo">Giả thuyết H1</span>
+          <h4 style="color: #fff; margin-bottom: 0.5rem;">Ước lượng Heading đóng góp lớn vào lỗi trên trục ngang (Horizontal Q2)</h4>
+          <p style="font-size: 0.9rem; color: var(--emerald); margin-bottom: 0.35rem;">
+            <strong>Ủng hộ nếu:</strong> Cấp Oracle Heading tạo mức tăng độ chính xác (gain) lớn, tái lập được và vượt trội hơn các can thiệp khác.
+          </p>
+          <p style="font-size: 0.9rem; color: var(--rose);">
+            <strong>Bác bỏ nếu:</strong> Effect size của heading nhỏ hoặc các can thiệp về Grounding / Geometry giải thích phần lớn lỗi.
+          </p>
+        </div>
+
+        <div class="glass-card">
+          <span class="pill-badge badge-hypo">Giả thuyết H2</span>
+          <h4 style="color: #fff; margin-bottom: 0.5rem;">Camera-frame Intrusion là một mẫu hình lỗi có hệ thống</h4>
+          <p style="font-size: 0.9rem; color: var(--emerald); margin-bottom: 0.35rem;">
+            <strong>Ủng hộ nếu:</strong> Trên các ca mâu thuẫn góc nhìn, model có xu hướng chọn đáp án theo góc camera vượt trội so với answer prior ngẫu nhiên.
+          </p>
+          <p style="font-size: 0.9rem; color: var(--rose);">
+            <strong>Bác bỏ nếu:</strong> Lỗi phân bố đều trên các nhãn hoặc biến mất khi kiểm soát thiên kiến vị trí lựa chọn (Option permutation).
+          </p>
+        </div>
+
+        <div class="glass-card">
+          <span class="pill-badge badge-hypo">Giả thuyết H3a</span>
+          <h4 style="color: #fff; margin-bottom: 0.5rem;">Heading Marginalization làm tăng độ chính xác trên dữ liệu chưa thấy (Held-out)</h4>
+          <p style="font-size: 0.9rem; color: var(--emerald); margin-bottom: 0.35rem;">
+            <strong>Ủng hộ nếu:</strong> Tích phân biên đa giả thuyết vượt trội mô hình đoán 1 góc (Single-pose) dưới cùng ngân sách thông tin và compute.
+          </p>
+          <p style="font-size: 0.9rem; color: var(--rose);">
+            <strong>Bác bỏ nếu:</strong> Không có chênh lệch đáng kể, hoặc mức tăng chỉ là do bổ sung tín hiệu visual khác nhau.
+          </p>
+        </div>
+
+        <div class="glass-card">
+          <span class="pill-badge badge-hypo">Giả thuyết H3b</span>
+          <h4 style="color: #fff; margin-bottom: 0.5rem;">Heading Marginalization cải thiện chất lượng dự đoán xác suất (Calibration)</h4>
+          <p style="font-size: 0.9rem; color: var(--emerald); margin-bottom: 0.35rem;">
+            <strong>Ủng hộ nếu:</strong> Chỉ số Brier Score, Proper Log-loss và Expected Calibration Error (ECE) được cải thiện rõ rệt.
+          </p>
+          <p style="font-size: 0.9rem; color: var(--rose);">
+            <strong>Bác bỏ nếu:</strong> Điểm số xác suất không được hiệu chuẩn hoặc việc dùng phân phối làm tăng rủi ro phân tán.
+          </p>
+        </div>
+      </div>
+
+      <!-- Lộ trình 4 Giai đoạn Nghiên cứu -->
+      <div class="sec-header" style="margin-top: 3rem;">
+        <h3 style="font-size: 1.4rem; color: #fff; font-weight: 700; margin-bottom: 0.5rem;">Lộ trình Triển khai Thực nghiệm 4 Giai đoạn Chuẩn:</h3>
+      </div>
+
+      <div class="roadmap-list">
+        <div class="roadmap-item">
+          <div class="phase-badge">GĐ 1</div>
+          <div class="phase-content">
+            <h4>Audit & Pilot Gán nhãn Dữ liệu (Audit & Annotation Pilot)</h4>
+            <p>Kiểm tra tập con ảnh người thật trên trục ngang (Human-horizontal Q2), xác định các ca mâu thuẫn giữa hướng đầu và thân (Head-torso disagreement), kiểm tra chất lượng ground truth và quy ước nhãn chính thức của SpatialMQA.</p>
+          </div>
+        </div>
+
+        <div class="roadmap-item">
+          <div class="phase-badge">GĐ 2</div>
+          <div class="phase-content">
+            <h4>Thực nghiệm Can thiệp Chẩn đoán 8 Điều kiện (Diagnostic Experiment)</h4>
+            <p>Triển khai factorial 8 conditions ($G \times H \times X$), đo lường main effects và interaction effects $I_{GH}$, kiểm tra thao tác (manipulation checks) xem model có thực sự sử dụng thông tin oracle được cấp không.</p>
+          </div>
+        </div>
+
+        <div class="roadmap-item">
+          <div class="phase-badge">GĐ 3</div>
+          <div class="phase-content">
+            <h4>Thực nghiệm Bất định Hướng nhìn (Uncertainty Experiment)</h4>
+            <p>Triển khai so sánh đối đầu giữa Deterministic Point-estimate vs. Calibrated Pose Posterior Marginalization dưới cùng ngân sách tính toán; đo lường độ nhạy quanh boundary.</p>
+          </div>
+        </div>
+
+        <div class="roadmap-item">
+          <div class="phase-badge">GĐ 4</div>
+          <div class="phase-content">
+            <h4>Kiểm tra Tính Tổng quát hóa & Kháng Thiên kiến (Generalization & Bias Controls)</h4>
+            <p>Đánh giá trên held-out scenes/people, kiểm tra hoán vị đáp án (Option permutations) và thử nghiệm trên mô hình mã nguồn mở hiện đại để kiểm chứng tính bền vững.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 6: Đối chiếu 15 Chỉnh sửa & Manifest PDF -->
+    <div id="tab-checklist" class="tab-content">
+      <div class="sec-header">
+        <h2 class="sec-title">📋 Bảng Đối chiếu 15 Mục Hiệu chỉnh Trực tiếp & Manifest Toàn văn PDF</h2>
+        <p class="sec-desc">
+          Bảng kiểm tra (Checklist) toàn diện đã được sửa đổi và kiểm chứng:
+        </p>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 70px;">STT</th>
+              <th style="width: 280px;">Nội dung Cần Sửa</th>
+              <th>Phương án Hiệu chỉnh Chuẩn Xác</th>
+              <th style="width: 140px;">Trạng Thái</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>01</td>
+              <td>P27: "can thiệp kích hoạt tăng +32.6%"</td>
+              <td>Sửa thành: LoRA DPO repair trên LM đạt +32.6 điểm robust accuracy; subset Direct loại bỏ perspective substitution.</td>
+              <td><span class="pill-badge badge-fix">ĐÃ SỬA</span></td>
+            </tr>
+            <tr>
+              <td>02</td>
+              <td>SpatialReasoner: "Perception 31% vs Reasoning 52.5%"</td>
+              <td>Ghi đúng tác vụ: Dự đoán orientation và suy luận góc dưới ngưỡng sai số 30°; không gọi là phân rã nhân quả.</td>
+              <td><span class="pill-badge badge-fix">ĐÃ SỬA</span></td>
+            </tr>
+            <tr>
+              <td>03</td>
+              <td>"3 Loại Vấn đề Độc lập"</td>
+              <td>Sửa thành: "Các nguồn lỗi phân biệt về mặt khái niệm, nhưng có thể tương tác với nhau".</td>
+              <td><span class="pill-badge badge-fix">ĐÃ SỬA</span></td>
+            </tr>
+            <tr>
+              <td>04</td>
+              <td>"CHƯA CÓ CÔNG TRÌNH NÀO"</td>
+              <td>Giới hạn phát ngôn: "Trong tập công trình đã đối chiếu, chưa tìm thấy đánh giá kết hợp các yếu tố này..."</td>
+              <td><span class="pill-badge badge-fix">ĐÃ SỬA</span></td>
+            </tr>
+            <tr>
+              <td>05</td>
+              <td>"Cực kỳ nhạy cảm quanh boundary"</td>
+              <td>Chuyển thành giả thuyết khoa học được đo lường bằng noise injection và boundary controls.</td>
+              <td><span class="pill-badge badge-fix">ĐÃ SỬA</span></td>
+            </tr>
+            <tr>
+              <td>06</td>
+              <td>H1: Oracle vẫn thấp $\rightarrow$ lỗi do transform</td>
+              <td>Bổ sung kiểm tra oracle-use, tương tác đa nhân tố và các giải thích cạnh tranh khác.</td>
+              <td><span class="pill-badge badge-fix">ĐÃ SỬA</span></td>
+            </tr>
+            <tr>
+              <td>07</td>
+              <td>H2: "Model luôn lười biếng mặc định camera"</td>
+              <td>Sửa thành: "Có xu hướng camera-frame intrusion trong những điều kiện mâu thuẫn góc nhìn".</td>
+              <td><span class="pill-badge badge-fix">ĐÃ SỬA</span></td>
+            </tr>
+            <tr>
+              <td>08</td>
+              <td>H3: Bác bỏ nếu không tăng ECE</td>
+              <td>Tách riêng accuracy và chất lượng xác suất (probabilistic quality); bổ sung proper scores (Brier, Log-loss).</td>
+              <td><span class="pill-badge badge-fix">ĐÃ SỬA</span></td>
+            </tr>
+            <tr>
+              <td>09</td>
+              <td>"5 Bước (Factorial Interventions)"</td>
+              <td>Gọi là pipeline xử lý; thiết kế bảng ma trận $2^3 = 8$ conditions cho factorial thực nghiệm.</td>
+              <td><span class="pill-badge badge-fix">ĐÃ SỬA</span></td>
+            </tr>
+            <tr>
+              <td>10</td>
+              <td>Công thức $P_{\text{obj}}$</td>
+              <td>Định nghĩa chính xác person frame $B$, tọa độ 2 thực thể $q_t, q_o$, hàm gán nhãn Table 2, và trục trọng lực.</td>
+              <td><span class="pill-badge badge-fix">ĐÃ SỬA</span></td>
+            </tr>
+            <tr>
+              <td>11</td>
+              <td>All-permutations bóc tách hình học</td>
+              <td>Nêu rõ giới hạn: consistency không tương đương correctness; kiểm soát thêm wording content.</td>
+              <td><span class="pill-badge badge-fix">ĐÃ SỬA</span></td>
+            </tr>
+            <tr>
+              <td>12</td>
+              <td>Q3: "Không có ý nghĩa thống kê"</td>
+              <td>Sửa thành: Phân tích thăm dò (Exploratory), báo cáo counts và Wilson 95% Confidence Intervals.</td>
+              <td><span class="pill-badge badge-fix">ĐÃ SỬA</span></td>
+            </tr>
+            <tr>
+              <td>13</td>
+              <td>IPT: "Bắt sinh ảnh trước khi trả lời"</td>
+              <td>Phân biệt rõ ràng giữa giám sát khi train (supervision) và chế độ suy luận trực tiếp (inference mode).</td>
+              <td><span class="pill-badge badge-fix">ĐÃ SỬA</span></td>
+            </tr>
+            <tr>
+              <td>14</td>
+              <td>Longo 2020: "Nền tảng thần kinh"</td>
+              <td>Sửa thành: "Bằng chứng hành vi / tâm vật lý học về ảnh hưởng của đầu và thân lên phán đoán góc nhìn".</td>
+              <td><span class="pill-badge badge-fix">ĐÃ SỬA</span></td>
+            </tr>
+            <tr>
+              <td>15</td>
+              <td>"Chỉ / không giải quyết" các task chưa đo</td>
+              <td>Sửa thành cách viết chuẩn mực: "Paper không đánh giá trực tiếp trên...".</td>
+              <td><span class="pill-badge badge-fix">ĐÃ SỬA</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Manifest PDFs Local -->
+      <div class="alert-box success">
+        <strong style="color: var(--emerald); font-size: 1.1rem;">📁 Manifest Kiểm Tra Toàn Văn PDF trong Repository:</strong>
+        <p style="margin-top: 0.5rem; color: #fff;">
+          Toàn bộ các file PDF đã được tải về lưu trữ tại đường dẫn nội bộ <code>docs/survey/papers_pdf/</code>:
+        </p>
+        <ul style="margin-top: 0.5rem; margin-left: 1.5rem; line-height: 1.7; font-size: 0.92rem; color: var(--text-muted);">
+          <li>📄 <code>2026_Cognitively_Inspired_Tokens_LLaVA.pdf</code> (3.4 MB) — LLaVA-1.5 orientation tokens</li>
+          <li>📄 <code>2026_CRISP_Diagnosing_Spatial.pdf</code> (8.8 MB) — Oracle diagnostics framework</li>
+          <li>📄 <code>2025_Beyond_Recognition_VPT.pdf</code> (8.4 MB) — Visual Perspective Taking diagnostics</li>
+          <li>📄 <code>2025_NeurIPS_SpatialReasoner.pdf</code> (13 MB) — Perception vs. reasoning decoupling</li>
+          <li>📄 <code>2026_LeRF_Reference_Frames.pdf</code> (18 MB) — Projected reference coordinate axes</li>
+          <li>📄 <code>2025_ViewSpatial_Bench.pdf</code> (7.3 MB) — Head vs. body orientation benchmark</li>
+          <li>📄 <code>2020_Cognition_Longo_Head_Torso.pdf</code> (1.0 MB) — Misalignment behavioral psychophysics</li>
+          <li>📄 <code>2025_ReMindView_Multiview.pdf</code> (14 MB) — Reasoning path decomposition</li>
+          <li>📄 <code>2025_ACL_SpatialMQA.pdf</code> (2.1 MB) — SpatialMQA primary anchor benchmark</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <p>Bản Phản biện Học thuật & Hiệu chỉnh Thiết kế Nghiên cứu • SpatialMQA Project • 2026</p>
+    </footer>
+  </div>
+
+  <script>
+    // Tab Switching Logic
+    const navBtns = document.querySelectorAll('.nav-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    navBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        navBtns.forEach(b => b.classList.remove('active'));
+        tabContents.forEach(tc => tc.classList.remove('active'));
+
+        btn.classList.add('active');
+        const targetTab = document.getElementById(btn.dataset.tab);
+        if (targetTab) {
+          targetTab.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
