@@ -9,6 +9,10 @@ set -eo pipefail
 export TRITON_CACHE_DIR="/tmp/triton_${USER:-user}"
 mkdir -p "${TRITON_CACHE_DIR}"
 
+# Prevent NCCL P2P / InfiniBand issues on virtualized GPU environments (Thunder Compute, Docker)
+export NCCL_P2P_DISABLE=1
+export NCCL_IB_DISABLE=1
+
 # Model & Data Paths
 MODEL_PATH=${1:-"liuhaotian/llava-v1.5-7b"}
 DATA_PATH=${2:-"data/spatial_mqa/train_3780.json"}
@@ -68,7 +72,7 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} deepspeed --include localhost:${GPU_ID} \
     --logging_steps 10 \
     --model_max_length 2048 \
     --gradient_checkpointing True \
-    --dataloader_num_workers 4 \
+    --dataloader_num_workers 0 \
     --lazy_preprocess True \
     --report_to tensorboard 2>&1 | tee logs/train_llava_lora.log
 
