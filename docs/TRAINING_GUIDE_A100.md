@@ -7,7 +7,8 @@
 
 - **GPU:** 1x NVIDIA A100 (40GB/80GB), or RTX A6000 (48GB) on Thunder Compute.
 - **Runtime:** PyTorch 2.5.1 + CUDA 12.1 wheels; a compatible NVIDIA host driver is required.
-- **Python:** use 3.10 in a fresh environment for this pinned legacy LLaVA stack.
+- **Python:** 3.10-3.12 in a fresh environment. Thunder images commonly ship
+  Python 3.12, so the dependency pins include binary wheels for that version.
 - **Attention:** native PyTorch SDPA; no external `flash-attn` or `xformers`.
 - Training time must be measured on the actual machine; no A6000 timing has been validated.
 
@@ -17,7 +18,7 @@ Run from the project root on the GPU machine. Keep the provider's preinstalled
 Python environment separate, especially if it contains another torch/torchaudio/xformers stack.
 
 ```bash
-conda create -n spatial-llava python=3.10 -y
+conda create -n spatial-llava python=3.12 -y
 conda activate spatial-llava
 python -m pip install pip==24.3.1 setuptools==75.6.0 wheel==0.45.1
 
@@ -66,6 +67,12 @@ print(torch.cuda.get_device_name(0), torch.__version__, torch.version.cuda)
 print("SDPA forward/backward passed; run a short actual training check next.")
 PYTHON
 ```
+
+If an earlier install attempted to compile `sentencepiece==0.1.99` or
+`scikit-learn==1.2.2`, stop that pip process and rerun the requirements command.
+The current pins use CPython 3.12 manylinux wheels and explicitly forbid source
+fallback for those two packages; neither CMake nor `libsentencepiece-dev` is
+needed.
 
 ---
 

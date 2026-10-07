@@ -1,9 +1,12 @@
-# Linux x86_64, Python 3.10; RTX A6000 (Thunder Compute) / A100.
+# Linux x86_64, Python 3.10-3.12; RTX A6000 (Thunder Compute) / A100.
 # Training/evaluation dependencies, not a full transitive lockfile.
 # Install CUDA torch first, then this file; see docs/TRAINING_GUIDE_A100.md.
 # LLaVA must be installed separately with --no-deps: upstream pins torch 2.1.2.
 # Native SDPA only: do not install flash-attn or xformers for this setup.
 --extra-index-url https://download.pytorch.org/whl/cu121
+# Never fall back to local C/C++ builds for packages that have CPython 3.12
+# manylinux wheels. This keeps Thunder images independent of cmake/pkg-config.
+--only-binary=sentencepiece,scikit-learn
 
 torch==2.5.1+cu121
 torchvision==0.20.1+cu121
@@ -15,7 +18,7 @@ accelerate==0.21.0
 peft==0.9.0
 huggingface-hub==0.26.5
 safetensors==0.4.5
-sentencepiece==0.1.99
+sentencepiece==0.2.0
 protobuf==3.20.3
 
 # ZeRO-2. Older DeepSpeed releases can import removed torch elastic APIs.
@@ -30,7 +33,9 @@ bitsandbytes==0.45.2
 # Keep NumPy below 2 for the older scientific/image stack used by LLaVA.
 numpy==1.26.4
 scipy==1.11.4
-scikit-learn==1.2.2
+# These versions publish CPython 3.12 wheels. Older LLaVA pins force slow and
+# fragile source builds on Thunder's Python 3.12 images.
+scikit-learn==1.4.2
 Pillow==10.4.0
 einops==0.6.1
 einops-exts==0.0.4
