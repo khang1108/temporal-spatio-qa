@@ -37,7 +37,7 @@ TASK_PROMPT = (
 )
 
 
-def load_model_and_tokenizer(model_path: str, lora_path: str = None, device: str = "cuda"):
+def load_model_and_tokenizer(model_path: str, lora_path: str = None, device: str = "cuda", load_4bit: bool = False, load_8bit: bool = False):
     try:
         from llava.model.builder import load_pretrained_model
         from llava.mm_utils import get_model_name_from_path
@@ -59,20 +59,24 @@ def load_model_and_tokenizer(model_path: str, lora_path: str = None, device: str
             if "lora" not in model_name.lower():
                 model_name = f"{model_name}-lora"
 
-            print(f"Loading LoRA model from base '{model_path}' and adapter '{actual_lora_dir}'...")
+            print(f"Loading LoRA model from base '{model_path}' and adapter '{actual_lora_dir}' (4bit={load_4bit}, 8bit={load_8bit})...")
             tokenizer, model, image_processor, context_len = load_pretrained_model(
                 model_path=actual_lora_dir,
                 model_base=model_path,
                 model_name=model_name,
+                load_4bit=load_4bit,
+                load_8bit=load_8bit,
                 device_map="auto" if device == "cuda" else "cpu"
             )
         else:
             model_name = get_model_name_from_path(model_path)
-            print(f"Loading base model from '{model_path}'...")
+            print(f"Loading base model from '{model_path}' (4bit={load_4bit}, 8bit={load_8bit})...")
             tokenizer, model, image_processor, context_len = load_pretrained_model(
                 model_path=model_path,
                 model_base=None,
                 model_name=model_name,
+                load_4bit=load_4bit,
+                load_8bit=load_8bit,
                 device_map="auto" if device == "cuda" else "cpu"
             )
 
@@ -92,12 +96,21 @@ def evaluate_benchmark(
     image_dir: str = "data/spatial_mqa/images",
     output_jsonl: str = "experiments/predictions/llava_predictions.jsonl",
     max_samples: int = None,
-    temperature: float = 0.4
+    temperature: float = 0.4,
+    load_4bit: bool = False,
+    load_8bit: bool = False,
 ):
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    print(f"Running evaluation on device: {device}")
+    print(f"Running evaluation on device: {device} (load_4bit={load_4bit}, load_8bit={load_8bit})")
 
-    tokenizer, model, image_processor = load_model_and_tokenizer(model_path, lora_path, device)
+    tokenizer, model, image_processor = load_model_and_tokenizer(
+        model_path=model_path,
+        lora_path=lora_path,
+        device=device,
+        load_4bit=load_4bit,
+        load_8bit=load_8bit
+    )
+
 
     from llava.constants import (
         IMAGE_TOKEN_INDEX,
@@ -198,6 +211,8 @@ def main():
     parser.add_argument("--output_jsonl", type=str, default="experiments/predictions/eval_preds.jsonl")
     parser.add_argument("--max_samples", type=int, default=None)
     parser.add_argument("--temperature", type=float, default=0.4)
+    parser.add_argument("--load_4bit", action="store_true", help="Load model in 4-bit quantization (useful for T4 16GB GPU)")
+    parser.add_argument("--load_8bit", action="store_true", help="Load model in 8-bit quantization")
     args = parser.parse_args()
 
     evaluate_benchmark(
@@ -207,8 +222,11 @@ def main():
         image_dir=args.image_dir,
         output_jsonl=args.output_jsonl,
         max_samples=args.max_samples,
-        temperature=args.temperature
+        temperature=args.temperature,
+        load_4bit=args.load_4bit,
+        load_8bit=args.load_8bit
     )
+
 
 
 if __name__ == "__main__":
