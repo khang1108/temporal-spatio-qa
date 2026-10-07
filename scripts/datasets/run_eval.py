@@ -164,12 +164,16 @@ def evaluate_benchmark(
             image = Image.open(img_path).convert("RGB")
 
         prompt_text = TASK_PROMPT.format(question=q, options="; ".join(opts))
-        qs = DEFAULT_IMAGE_TOKEN + "\n" + prompt_text
+        if getattr(model.config, 'mm_use_im_start_end', False):
+            qs = re.sub(DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN + DEFAULT_IMAGE_TOKEN + DEFAULT_IM_END_TOKEN, prompt_text)
+        else:
+            qs = prompt_text
 
         conv = conv_templates["llava_v1"].copy()
         conv.append_message(conv.roles[0], qs)
         conv.append_message(conv.roles[1], None)
         full_prompt = conv.get_prompt()
+
 
         images_tensor = process_images([image], image_processor, model.config)
         if device == "cuda":
