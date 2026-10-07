@@ -1,7 +1,7 @@
 #!/bin/bash
 # ==============================================================================
 # Fine-tune LLaVA-1.5-7B with LoRA on SpatialMQA
-# Hardware: 1x NVIDIA A100 40GB
+# Hardware: 1x NVIDIA A100 40GB or RTX A6000 48GB
 # ==============================================================================
 
 set -eo pipefail
@@ -14,8 +14,8 @@ mkdir -p "${TRITON_CACHE_DIR}"
 
 export TOKENIZERS_PARALLELISM=false
 
-# Không disable NCCL P2P/IB mặc định trên vKong.
-# Chỉ bật lại nếu thực sự gặp NCCL/runtime issue.
+# Keep NCCL defaults on a single-GPU machine. Enable these workarounds only
+# when the provider reports a virtualized P2P/InfiniBand issue.
 #
 # export NCCL_P2P_DISABLE=1
 # export NCCL_IB_DISABLE=1
@@ -25,10 +25,9 @@ export TOKENIZERS_PARALLELISM=false
 # ----------------------------------------------------------------------
 MODEL_PATH=${1:-"liuhaotian/llava-v1.5-7b"}
 
-# Persistent storage trên vKong
-DATA_PATH=${2:-"/data/spatial_mqa/train_3780.json"}
-IMAGE_FOLDER=${3:-"/data/spatial_mqa/images"}
-OUTPUT_DIR=${4:-"/data/checkpoints/llava_1.5_7b_lora"}
+DATA_PATH=${2:-"data/spatial_mqa/train_3780.json"}
+IMAGE_FOLDER=${3:-"data/spatial_mqa/images"}
+OUTPUT_DIR=${4:-"experiments/checkpoints/llava_1.5_7b_lora"}
 
 GPU_ID=${5:-"0"}
 
@@ -45,7 +44,6 @@ echo "  DeepSpeed:        ${DEEPSPEED_CONFIG}"
 echo "======================================================================"
 
 mkdir -p "${OUTPUT_DIR}"
-python scripts/check_training_checkpoint.py "${OUTPUT_DIR}"
 LOG_DIR="${OUTPUT_DIR}/logs"
 mkdir -p "${LOG_DIR}"
 
