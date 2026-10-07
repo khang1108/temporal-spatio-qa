@@ -55,11 +55,14 @@ def load_model_and_tokenizer(model_path: str, lora_path: str = None, device: str
                 )
                 print(f"Downloaded to local cache: {actual_lora_dir}")
 
-            model_name = get_model_name_from_path(actual_lora_dir)
+            raw_name = get_model_name_from_path(lora_path)
+            model_name = f"llava-{raw_name}" if "llava" not in raw_name.lower() else raw_name
             if "lora" not in model_name.lower():
                 model_name = f"{model_name}-lora"
 
+            print(f"Detected model_name: '{model_name}' for LLaVA LoRA loading.")
             print(f"Loading LoRA model from base '{model_path}' and adapter '{actual_lora_dir}' (4bit={load_4bit}, 8bit={load_8bit})...")
+
             tokenizer, model, image_processor, context_len = load_pretrained_model(
                 model_path=actual_lora_dir,
                 model_base=model_path,
