@@ -5,26 +5,66 @@
 
 ## 1. Hardware & Environment Requirements
 
-- **GPU:** 1x NVIDIA A100 (40GB or 80GB)
-- **CUDA:** 12.1+ / 11.8+
-- **Python:** 3.10 - 3.12
-- **Estimated Training Time:**
-  - LLaVA-1.5-7B (10 epochs, 3,780 samples): **~20 - 25 minutes**
-  - SpaceLLaVA (10 epochs): **~20 - 25 minutes**
+- **GPU:** 1x NVIDIA A100 (40GB/80GB), or RTX A6000 (48GB) on Thunder Compute.
+- **Runtime:** PyTorch 2.5.1 + CUDA 12.1 wheels; a compatible NVIDIA host driver is required.
+- **Python:** use 3.10 in a fresh environment for this pinned legacy LLaVA stack.
+- **Attention:** native PyTorch SDPA; no external `flash-attn` or `xformers`.
+- Training time must be measured on the actual machine; no A6000 timing has been validated.
 
-### Install Dependencies:
+### Install Dependencies
+
+Run from the project root on the GPU machine. Keep the provider's preinstalled
+Python environment separate, especially if it contains another torch/torchaudio/xformers stack.
+
 ```bash
-# 1. Install PyTorch with CUDA support (if not already installed)
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+conda create -n spatial-llava python=3.10 -y
+conda activate spatial-llava
+python -m pip install pip==24.3.1 setuptools==75.6.0 wheel==0.45.1
 
-# 2. Install LLaVA, DeepSpeed, and FlashAttention
-pip install deepspeed==0.14.2
-pip install git+https://github.com/haotian-liu/LLaVA.git
-pip install flash-attn --no-build-isolation
+# Install torch first so DeepSpeed setup can inspect the target runtime.
+python -m pip install torch==2.5.1+cu121 torchvision==0.20.1+cu121 \
+  --index-url https://download.pytorch.org/whl/cu121
+DS_BUILD_OPS=0 python -m pip install -r requirements.txt
 
-# 3. Install core packages
-pip install peft==0.9.0 transformers==4.37.2 accelerate==0.21.0
-pip install pillow pandas numpy tqdm
+# Install only LLaVA source: its upstream metadata otherwise downgrades torch.
+python -m pip install --no-deps \
+  https://github.com/haotian-liu/LLaVA/archive/c121f0432da27facab705978f83c4ada465e46fd.zip
+export TRITON_CACHE_DIR="/tmp/triton_${USER}"
+export ATTN_IMPL=sdpa
+mkdir -p "$TRITON_CACHE_DIR"
+```
+
+`DS_BUILD_OPS=0` skips ahead-of-time DeepSpeed extension builds, not runtime JIT.
+If the selected optimizer requires a CUDA extension, a compatible CUDA toolkit
+and compiler must also be installed on the GPU machine.
+
+The project intentionally uses torch 2.5.1 instead of upstream LLaVA's declared
+2.1.2. Installing LLaVA with `--no-deps` prevents resolver downgrades but does not
+rewrite that metadata: `pip check` can report the upstream torch/torchvision
+mismatch and missing web-demo dependencies. Do not fix those reports by blindly
+installing `llava[train]`; this requirements file targets training/evaluation,
+not LLaVA's Gradio server. Runtime compatibility must still be checked.
+
+```bash
+python - <<'PYTHON'
+import inspect
+import torch, torchvision, transformers, deepspeed, peft
+from llava.train.train import train
+from llava.model.language_model.llava_llama import LlavaConfig, LlavaLlamaForCausalLM
+from transformers.models.llama.modeling_llama import LlamaSdpaAttention
+assert torch.cuda.is_available(), "CUDA GPU unavailable"
+assert torch.cuda.is_bf16_supported(), "BF16 unavailable"
+assert "attn_implementation" in inspect.signature(train).parameters
+config = LlavaConfig(vocab_size=32, hidden_size=32, intermediate_size=64,
+                     num_hidden_layers=1, num_attention_heads=4, num_key_value_heads=4)
+config._attn_implementation = "sdpa"
+model = LlavaLlamaForCausalLM(config).to(device="cuda", dtype=torch.bfloat16)
+assert isinstance(model.model.layers[0].self_attn, LlamaSdpaAttention)
+ids = torch.tensor([[1, 2, 3, 4]], device="cuda")
+model(input_ids=ids, labels=ids, use_cache=False).loss.backward()
+print(torch.cuda.get_device_name(0), torch.__version__, torch.version.cuda)
+print("SDPA forward/backward passed; run a short actual training check next.")
+PYTHON
 ```
 
 ---
