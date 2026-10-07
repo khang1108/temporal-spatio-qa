@@ -26,11 +26,11 @@ mkdir -p "$(dirname "${OUTPUT_JSONL}")"
 # Check if images exist, if not download them automatically
 if [ ! -d "data/spatial_mqa/images" ] || [ $(ls -1 data/spatial_mqa/images 2>/dev/null | wc -l) -lt 100 ]; then
     echo "[INFO] Images not found or incomplete. Downloading 5,063 images from Hugging Face..."
-    python scripts/download_images.py
+    python scripts/datasets/download_images.py
 fi
 
 # Run inference and compute benchmark metrics with paper comparison
-CUDA_VISIBLE_DEVICES=${GPU_ID} python scripts/run_eval.py \
+CUDA_VISIBLE_DEVICES=${GPU_ID} python scripts/datasets/run_eval.py \
     --model_path "${BASE_MODEL}" \
     --lora_path "${LORA_PATH}" \
     --test_jsonl "data/spatial_mqa/test.jsonl" \

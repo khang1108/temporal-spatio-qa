@@ -52,8 +52,9 @@ mkdir -p "${LOG_DIR}"
 # ----------------------------------------------------------------------
 
 CUDA_VISIBLE_DEVICES=${GPU_ID} deepspeed \
-    scripts/train_mem.py \
+    scripts/finetune/train_mem.py \
     --deepspeed "${DEEPSPEED_CONFIG}" \
+
     --lora_enable True \
     --lora_r 128 \
     --lora_alpha 256 \
