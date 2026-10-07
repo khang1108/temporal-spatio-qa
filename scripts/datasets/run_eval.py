@@ -42,53 +42,67 @@ def load_model_and_tokenizer(model_path: str, lora_path: str = None, device: str
         from llava.model.builder import load_pretrained_model
         from llava.mm_utils import get_model_name_from_path
         from llava.utils import disable_torch_init
-        disable_torch_init()
-
-        if lora_path:
-            actual_lora_dir = lora_path
-            if not os.path.exists(lora_path):
-                print(f"Downloading LoRA adapter checkpoint from Hugging Face Hub: {lora_path} ...")
-                from huggingface_hub import snapshot_download
-                actual_lora_dir = snapshot_download(
-                    repo_id=lora_path,
-                    allow_patterns=["adapter_*", "non_lora_trainables.bin", "config.json"]
-                )
-                print(f"Downloaded to local cache: {actual_lora_dir}")
-
-            raw_name = get_model_name_from_path(lora_path)
-            model_name = f"llava-{raw_name}" if "llava" not in raw_name.lower() else raw_name
-            if "lora" not in model_name.lower():
-                model_name = f"{model_name}-lora"
-
-            print(f"Detected model_name: '{model_name}' for LLaVA LoRA loading.")
-            print(f"Loading LoRA model from base '{model_path}' and adapter '{actual_lora_dir}' (4bit={load_4bit}, 8bit={load_8bit})...")
-
-            tokenizer, model, image_processor, context_len = load_pretrained_model(
-                model_path=actual_lora_dir,
-                model_base=model_path,
-                model_name=model_name,
-                load_4bit=load_4bit,
-                load_8bit=load_8bit,
-                device_map="auto" if device == "cuda" else "cpu"
-            )
-        else:
-            model_name = get_model_name_from_path(model_path)
-            print(f"Loading base model from '{model_path}' (4bit={load_4bit}, 8bit={load_8bit})...")
-            tokenizer, model, image_processor, context_len = load_pretrained_model(
-                model_path=model_path,
-                model_base=None,
-                model_name=model_name,
-                load_4bit=load_4bit,
-                load_8bit=load_8bit,
-                device_map="auto" if device == "cuda" else "cpu"
-            )
-
-        return tokenizer, model, image_processor
     except ImportError:
         raise ImportError(
             "llava package is required for inference. "
             "Please install via: pip install git+https://github.com/haotian-liu/LLaVA.git"
         )
+
+    # Disable torchao check in peft if incompatible torchao version is present on environment
+    try:
+        import peft.import_utils as peft_import_utils
+        peft_import_utils.is_torchao_available = lambda: False
+    except (ImportError, AttributeError):
+        pass
+    try:
+        import peft.tuners.lora.torchao as peft_torchao
+        peft_torchao.is_torchao_available = lambda: False
+    except (ImportError, AttributeError):
+        pass
+
+    disable_torch_init()
+
+    if lora_path:
+        actual_lora_dir = lora_path
+        if not os.path.exists(lora_path):
+            print(f"Downloading LoRA adapter checkpoint from Hugging Face Hub: {lora_path} ...")
+            from huggingface_hub import snapshot_download
+            actual_lora_dir = snapshot_download(
+                repo_id=lora_path,
+                allow_patterns=["adapter_*", "non_lora_trainables.bin", "config.json"]
+            )
+            print(f"Downloaded to local cache: {actual_lora_dir}")
+
+        raw_name = get_model_name_from_path(lora_path)
+        model_name = f"llava-{raw_name}" if "llava" not in raw_name.lower() else raw_name
+        if "lora" not in model_name.lower():
+            model_name = f"{model_name}-lora"
+
+        print(f"Detected model_name: '{model_name}' for LLaVA LoRA loading.")
+        print(f"Loading LoRA model from base '{model_path}' and adapter '{actual_lora_dir}' (4bit={load_4bit}, 8bit={load_8bit})...")
+
+        tokenizer, model, image_processor, context_len = load_pretrained_model(
+            model_path=actual_lora_dir,
+            model_base=model_path,
+            model_name=model_name,
+            load_4bit=load_4bit,
+            load_8bit=load_8bit,
+            device_map="auto" if device == "cuda" else "cpu"
+        )
+    else:
+        model_name = get_model_name_from_path(model_path)
+        print(f"Loading base model from '{model_path}' (4bit={load_4bit}, 8bit={load_8bit})...")
+        tokenizer, model, image_processor, context_len = load_pretrained_model(
+            model_path=model_path,
+            model_base=None,
+            model_name=model_name,
+            load_4bit=load_4bit,
+            load_8bit=load_8bit,
+            device_map="auto" if device == "cuda" else "cpu"
+        )
+
+    return tokenizer, model, image_processor
+
 
 
 
