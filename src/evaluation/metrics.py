@@ -153,27 +153,79 @@ def evaluate_predictions(predictions: List[Dict[str, Any]]) -> Dict[str, Any]:
     return results
 
 
+PAPER_BASELINES = {
+    "LLaVA-1.5-7B (Zero-Shot)": {
+        "accuracy": 29.28,
+        "precision": 30.72,
+        "recall": 31.18,
+        "f1": 30.95,
+        "A_x": None,
+        "A_y": None,
+        "A_z": None,
+        "Q1": None,
+        "Q2": None,
+        "Q3": None,
+    },
+    "LLaVA-1.5-7B (LoRA)": {
+        "accuracy": 46.85,  # 46.56% in group breakdown
+        "precision": 46.10,
+        "recall": 44.56,
+        "f1": 45.32,
+        "A_x": 55.71,
+        "A_y": 29.64,
+        "A_z": 48.13,
+        "Q1": 53.14,
+        "Q2": 40.99,
+        "Q3": 64.71,
+    },
+    "SpaceLLaVA (LoRA)": {
+        "accuracy": 48.14,
+        "precision": 47.96,
+        "recall": 46.18,
+        "f1": 47.05,
+        "A_x": 56.00,
+        "A_y": 51.85,
+        "A_z": 31.41,
+        "Q1": 54.87,
+        "Q2": 42.37,
+        "Q3": 58.82,
+    }
+}
+
+
 def print_evaluation_report(results: Dict[str, Any], model_name: str = "Model"):
     ov = results["overall"]
     ax = results["by_axis"]
     ps = results["by_perspective"]
+    paper_ref = PAPER_BASELINES["LLaVA-1.5-7B (LoRA)"]
 
-    print("=" * 65)
-    print(f"  SPATIALMQA BENCHMARK EVALUATION REPORT: {model_name}")
-    print("=" * 65)
-    print(f"Total Samples: {ov['total_samples']} | Correct: {ov['correct_samples']}")
-    print(f"  Accuracy:  {ov['accuracy']:.2f}%")
-    print(f"  Precision: {ov['precision']:.2f}%")
-    print(f"  Recall:    {ov['recall']:.2f}%")
-    print(f"  Macro-F1:  {ov['f1']:.2f}%")
-    print("-" * 65)
+    def delta_str(val, ref):
+        if ref is None:
+            return "--"
+        diff = val - ref
+        sign = "+" if diff >= 0 else ""
+        return f"{sign}{diff:.2f}%"
+
+    print("=" * 80)
+    print(f"  SPATIALMQA BENCHMARK EVALUATION REPORT (ACL 2025 Long): {model_name}")
+    print("=" * 80)
+    print(f"Total Test Samples: {ov['total_samples']} | Correct: {ov['correct_samples']}")
+    print("-" * 80)
+    print(f"{'Metric':<30} | {'Current Run':<12} | {'Paper (LoRA)':<14} | {'Delta vs Paper':<14}")
+    print("-" * 80)
+    print(f"{'Overall Accuracy':<30} | {ov['accuracy']:>10.2f}% | {paper_ref['accuracy']:>12.2f}% | {delta_str(ov['accuracy'], paper_ref['accuracy']):>14}")
+    print(f"{'Macro-Precision':<30} | {ov['precision']:>10.2f}% | {paper_ref['precision']:>12.2f}% | {delta_str(ov['precision'], paper_ref['precision']):>14}")
+    print(f"{'Macro-Recall':<30} | {ov['recall']:>10.2f}% | {paper_ref['recall']:>12.2f}% | {delta_str(ov['recall'], paper_ref['recall']):>14}")
+    print(f"{'Macro-F1':<30} | {ov['f1']:>10.2f}% | {paper_ref['f1']:>12.2f}% | {delta_str(ov['f1'], paper_ref['f1']):>14}")
+    print("-" * 80)
     print("3D Spatial Axes Accuracy:")
-    print(f"  A_x (Horizontal: left/right):     {ax['A_x']:.2f}%")
-    print(f"  A_y (Depth: in front/behind):     {ax['A_y']:.2f}%")
-    print(f"  A_z (Vertical: on-above/below):   {ax['A_z']:.2f}%")
-    print("-" * 65)
+    print(f"  {'A_x (Horizontal: left/right)':<28} | {ax['A_x']:>10.2f}% | {paper_ref['A_x']:>12.2f}% | {delta_str(ax['A_x'], paper_ref['A_x']):>14}")
+    print(f"  {'A_y (Depth: front/behind)':<28} | {ax['A_y']:>10.2f}% | {paper_ref['A_y']:>12.2f}% | {delta_str(ax['A_y'], paper_ref['A_y']):>14}")
+    print(f"  {'A_z (Vertical: above/below)':<28} | {ax['A_z']:>10.2f}% | {paper_ref['A_z']:>12.2f}% | {delta_str(ax['A_z'], paper_ref['A_z']):>14}")
+    print("-" * 80)
     print("Perspective Rule Accuracy:")
-    print(f"  Q1 (Rule 1: Out-of-image):        {ps['Q1_OutOfImage']:.2f}%")
-    print(f"  Q2 (Rule 2: First-person):        {ps['Q2_FirstPerson']:.2f}%")
-    print(f"  Q3 (Rule 3: Third-person):        {ps['Q3_ThirdPerson']:.2f}%")
-    print("=" * 65)
+    print(f"  {'Q1 (Rule 1: Out-of-image)':<28} | {ps['Q1_OutOfImage']:>10.2f}% | {paper_ref['Q1']:>12.2f}% | {delta_str(ps['Q1_OutOfImage'], paper_ref['Q1']):>14}")
+    print(f"  {'Q2 (Rule 2: First-person)':<28} | {ps['Q2_FirstPerson']:>10.2f}% | {paper_ref['Q2']:>12.2f}% | {delta_str(ps['Q2_FirstPerson'], paper_ref['Q2']):>14}")
+    print(f"  {'Q3 (Rule 3: Third-person)':<28} | {ps['Q3_ThirdPerson']:>10.2f}% | {paper_ref['Q3']:>12.2f}% | {delta_str(ps['Q3_ThirdPerson'], paper_ref['Q3']):>14}")
+    print("=" * 80)
+
