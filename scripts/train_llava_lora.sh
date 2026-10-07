@@ -1,26 +1,37 @@
 #!/bin/bash
 # ==============================================================================
-# Fine-tune LLaVA-1.5-7B with LoRA on SpatialMQA (ACL 2025)
-# Hardware: 1x NVIDIA A100 (40GB or 80GB)
+# Fine-tune LLaVA-1.5-7B with LoRA on SpatialMQA
+# Hardware: 1x NVIDIA A100 40GB
 # ==============================================================================
 
 set -eo pipefail
 
+# ----------------------------------------------------------------------
+# Runtime/cache
+# ----------------------------------------------------------------------
 export TRITON_CACHE_DIR="/tmp/triton_${USER:-user}"
 mkdir -p "${TRITON_CACHE_DIR}"
 
-# Prevent NCCL P2P / InfiniBand issues on virtualized GPU environments (Thunder Compute, Docker)
-export NCCL_P2P_DISABLE=1
-export NCCL_IB_DISABLE=1
+export TOKENIZERS_PARALLELISM=false
 
-# Model & Data Paths
+# Không disable NCCL P2P/IB mặc định trên vKong.
+# Chỉ bật lại nếu thực sự gặp NCCL/runtime issue.
+#
+# export NCCL_P2P_DISABLE=1
+# export NCCL_IB_DISABLE=1
+
+# ----------------------------------------------------------------------
+# Paths
+# ----------------------------------------------------------------------
 MODEL_PATH=${1:-"liuhaotian/llava-v1.5-7b"}
-DATA_PATH=${2:-"data/spatial_mqa/train_3780.json"}
-IMAGE_FOLDER=${3:-"data/spatial_mqa/images"}
-OUTPUT_DIR=${4:-"experiments/checkpoints/llava_1.5_7b_lora"}
+
+# Persistent storage trên vKong
+DATA_PATH=${2:-"/data/spatial_mqa/train_3780.json"}
+IMAGE_FOLDER=${3:-"/data/spatial_mqa/images"}
+OUTPUT_DIR=${4:-"/data/checkpoints/llava_1.5_7b_lora"}
+
 GPU_ID=${5:-"0"}
 
-# DeepSpeed config (ZeRO-2 is optimal for 1x A100; use zero3.json if multi-GPU)
 DEEPSPEED_CONFIG="scripts/zero2.json"
 
 echo "======================================================================"
@@ -34,19 +45,25 @@ echo "  DeepSpeed:        ${DEEPSPEED_CONFIG}"
 echo "======================================================================"
 
 mkdir -p "${OUTPUT_DIR}"
-mkdir -p logs
+python scripts/check_training_checkpoint.py "${OUTPUT_DIR}"
+LOG_DIR="${OUTPUT_DIR}/logs"
+mkdir -p "${LOG_DIR}"
 
-CUDA_VISIBLE_DEVICES=${GPU_ID} deepspeed --include localhost:${GPU_ID} \
+# ----------------------------------------------------------------------
+# Train
+# ----------------------------------------------------------------------
+
+CUDA_VISIBLE_DEVICES=${GPU_ID} deepspeed \
     scripts/train_mem.py \
-    --deepspeed ${DEEPSPEED_CONFIG} \
+    --deepspeed "${DEEPSPEED_CONFIG}" \
     --lora_enable True \
     --lora_r 128 \
     --lora_alpha 256 \
     --mm_projector_lr 2e-5 \
-    --model_name_or_path ${MODEL_PATH} \
+    --model_name_or_path "${MODEL_PATH}" \
     --version v1 \
-    --data_path ${DATA_PATH} \
-    --image_folder ${IMAGE_FOLDER} \
+    --data_path "${DATA_PATH}" \
+    --image_folder "${IMAGE_FOLDER}" \
     --vision_tower openai/clip-vit-large-patch14-336 \
     --mm_projector_type mlp2x_gelu \
     --mm_vision_select_layer -2 \
@@ -56,11 +73,11 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} deepspeed --include localhost:${GPU_ID} \
     --group_by_modality_length True \
     --bf16 True \
     --tf32 True \
-    --output_dir ${OUTPUT_DIR} \
+    --output_dir "${OUTPUT_DIR}" \
     --num_train_epochs 10 \
-    --per_device_train_batch_size 8 \
-    --per_device_eval_batch_size 4 \
-    --gradient_accumulation_steps 2 \
+    --per_device_train_batch_size 2 \
+    --per_device_eval_batch_size 1 \
+    --gradient_accumulation_steps 8 \
     --evaluation_strategy "no" \
     --save_strategy "steps" \
     --save_steps 100 \
@@ -72,9 +89,11 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} deepspeed --include localhost:${GPU_ID} \
     --logging_steps 10 \
     --model_max_length 2048 \
     --gradient_checkpointing True \
-    --dataloader_num_workers 0 \
+    --dataloader_num_workers 4 \
     --lazy_preprocess True \
-    --report_to tensorboard 2>&1 | tee logs/train_llava_lora.log
+    --logging_dir "${LOG_DIR}/tensorboard" \
+    --report_to tensorboard \
+    2>&1 | tee -a "${LOG_DIR}/train.log"
 
 echo "======================================================================"
 echo "LLaVA-1.5 LoRA fine-tuning completed successfully!"
