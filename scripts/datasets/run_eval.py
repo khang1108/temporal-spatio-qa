@@ -33,7 +33,7 @@ TASK_PROMPT = (
     "You are currently a senior expert in spatial relation reasoning. \n "
     "Given an Image, a Question and Options, your task is to answer the correct spatial relation. "
     "Note that you only need to choose one option from the all options without explaining any reason. \n "
-    "Input: Image: <image>, Question: {question}, Options: {options}. \n Output:"
+    "Input: Image: , Question: {question}, Options: {options}. \n Output:"
 )
 
 
@@ -165,9 +165,9 @@ def evaluate_benchmark(
 
         prompt_text = TASK_PROMPT.format(question=q, options="; ".join(opts))
         if getattr(model.config, 'mm_use_im_start_end', False):
-            qs = re.sub(DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN + DEFAULT_IMAGE_TOKEN + DEFAULT_IM_END_TOKEN, prompt_text)
+            qs = DEFAULT_IM_START_TOKEN + DEFAULT_IMAGE_TOKEN + DEFAULT_IM_END_TOKEN + "\n" + prompt_text
         else:
-            qs = prompt_text
+            qs = DEFAULT_IMAGE_TOKEN + "\n" + prompt_text
 
         conv = conv_templates["llava_v1"].copy()
         conv.append_message(conv.roles[0], qs)
@@ -231,7 +231,7 @@ def main():
     parser.add_argument("--image_dir", type=str, default="data/spatial_mqa/images")
     parser.add_argument("--output_jsonl", type=str, default="experiments/predictions/eval_preds.jsonl")
     parser.add_argument("--max_samples", type=int, default=None)
-    parser.add_argument("--temperature", type=float, default=0.4)
+    parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--load_4bit", action="store_true", help="Load model in 4-bit quantization (useful for T4 16GB GPU)")
     parser.add_argument("--load_8bit", action="store_true", help="Load model in 8-bit quantization")
     args = parser.parse_args()

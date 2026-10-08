@@ -30,6 +30,24 @@ AXIS_MAPPING = {
 }
 
 
+def normalize_spatial_relation(output_text: str) -> str:
+    """Normalize model output text into standard SpatialMQA relation labels per official code."""
+    t = output_text.strip().lower()
+    if "in front of" in t or "front" in t:
+        return "in front of"
+    elif "behind" in t:
+        return "behind"
+    elif "left of" in t or "left" in t:
+        return "left of"
+    elif "right of" in t or "right" in t:
+        return "right of"
+    elif "on/above" in t or "above" in t or "on" in t:
+        return "on/above"
+    elif "below" in t or "under" in t:
+        return "below"
+    return ""
+
+
 def classify_perspective(question: str) -> str:
     ql = question.lower()
     if "from your perspective" in ql or "from the perspective" in ql:
@@ -72,17 +90,15 @@ def evaluate_predictions(predictions: List[Dict[str, Any]]) -> Dict[str, Any]:
         gt = item["answer"].strip().lower()
         pred_raw = str(item.get("output", item.get("prediction", ""))).strip().lower()
 
-        # Matching heuristic per paper
-        is_correct = (gt in pred_raw) or (pred_raw in gt and len(pred_raw) > 0)
-        
-        # Exact relation extraction
-        pred_rel = None
-        for r in RELATIONS:
-            if r in pred_raw:
-                pred_rel = r
-                break
-        if pred_rel is None:
-            pred_rel = "unknown"
+        # Matching heuristic per official paper code and normalization
+        norm_rel = normalize_spatial_relation(pred_raw)
+        pred_rel = norm_rel if norm_rel in RELATIONS else "unknown"
+
+        is_correct = (
+            (gt == pred_rel) or
+            (gt in pred_raw) or
+            (pred_raw in gt and len(pred_raw) > 0)
+        )
 
         if is_correct:
             correct_total += 1

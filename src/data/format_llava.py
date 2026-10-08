@@ -17,7 +17,7 @@ TASK_PROMPT_TEMPLATE = (
     "You are currently a senior expert in spatial relation reasoning. \n "
     "Given an Image, a Question and Options, your task is to answer the correct spatial relation. "
     "Note that you only need to choose one option from the all options without explaining any reason. \n "
-    "Input: Image: <image>, Question: {question}, Options: {options}. \n Output:"
+    "Input: Image: , Question: {question}, Options: {options}. \n Output:"
 )
 
 
