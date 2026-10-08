@@ -1,7 +1,24 @@
 # HƯỚNG DẪN TRIỂN KHAI AZURE & KẾT NỐI CLOUDFLARE TUNNEL (npl.iamphuckhang.dev)
 
-Ứng dụng: **SpatialMQA Failure Visualizer & Multi-User Annotation Portal**
+Ứng dụng: **SpatialMQA Failure Visualizer & Multi-User Annotation Portal**  
 Kiến trúc: **React + Node.js (Express) + Native SQLite (`node:sqlite`) chạy trên Port 3000**
+
+---
+
+## 🟢 THÔNG TIN MÁY CHỦ AZURE ĐÃ KHỞI TẠO THÀNH CÔNG
+
+- **Tên VM:** `vm-spatial-mqa`
+- **Resource Group:** `rg-dres-server`
+- **Vị trí:** `eastasia` (Hong Kong / East Asia)
+- **Kích thước VM:** `Standard_B2s_v2` (2 vCPUs, 4GB RAM)
+- **Địa chỉ IP Public:** `20.205.104.181`
+- **Cổng ứng dụng:** `3000` (`http://20.205.104.181:3000`)
+- **Tài khoản SSH:** `azureuser` (Đã tích hợp sẵn SSH key của bạn)
+  ```bash
+  ssh azureuser@20.205.104.181
+  ```
+- **Trạng thái dịch vụ:** PM2 daemon `spatial-visualizer` đang chạy online, tự khởi động cùng hệ điều hành.
+- **cloudflared:** Đã cài sẵn phiên bản `2026.10.0` trên máy ảo.
 
 ---
 
