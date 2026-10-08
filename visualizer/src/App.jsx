@@ -386,13 +386,13 @@ export default function App() {
               {/* Card Image */}
               <div className="case-img-container">
                 <img
-                  src={item.image_url}
+                  src={`/images/${item.image}`}
                   alt={item.image}
                   className="case-img"
                   loading="lazy"
                   onError={(e) => {
                     e.target.onerror = null;
-                    e.target.src = "https://images.cocodataset.org/val2017/" + item.image;
+                    e.target.src = item.image_url || ("https://images.cocodataset.org/val2017/" + item.image);
                   }}
                 />
               </div>
@@ -541,13 +541,21 @@ export default function App() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
               <div>
                 <img
-                  src={selectedItem.image_url}
+                  src={`/images/${selectedItem.image}`}
                   alt={selectedItem.image}
                   style={{ width: '100%', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'block' }}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = selectedItem.image_url || ("https://images.cocodataset.org/val2017/" + selectedItem.image);
+                  }}
                 />
                 <div style={{ marginTop: '8px', fontSize: '12px' }}>
+                  <a href={`/images/${selectedItem.image}`} target="_blank" rel="noreferrer">
+                    Mở ảnh trực tiếp từ Azure VM
+                  </a>
+                  {' · '}
                   <a href={selectedItem.image_url} target="_blank" rel="noreferrer">
-                    Mở ảnh gốc full-res (Hugging Face CDN)
+                    Link dự phòng (Hugging Face)
                   </a>
                 </div>
               </div>

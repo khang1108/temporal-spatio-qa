@@ -120,12 +120,19 @@ app.get('/api/export', (req, res) => {
   }
 });
 
+// Serve dataset images locally if data/spatial_mqa/images exists
+const imagesPath = path.join(__dirname, '..', 'data', 'spatial_mqa', 'images');
+app.use('/images', express.static(imagesPath, {
+  maxAge: '7d',
+  immutable: true
+}));
+
 // Serve static frontend build if dist exists
 const distPath = path.join(__dirname, 'dist');
 if (fs.existsSync(distPath)) {
   app.use(express.static(distPath));
   app.use((req, res, next) => {
-    if (req.method === 'GET' && !req.path.startsWith('/api')) {
+    if (req.method === 'GET' && !req.path.startsWith('/api') && !req.path.startsWith('/images')) {
       return res.sendFile(path.join(distPath, 'index.html'));
     }
     next();
