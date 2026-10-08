@@ -65,7 +65,7 @@ app.get('/api/comments', (req, res) => {
 app.post('/api/comments', (req, res) => {
   try {
     const { sample_id, user_id, comment, failure_tag } = req.body;
-    if (!sample_id || !user_id || !comment) {
+    if (sample_id === undefined || sample_id === null || sample_id === '' || !user_id || !comment) {
       return res.status(400).json({ success: false, error: 'sample_id, user_id, and comment are required' });
     }
 
