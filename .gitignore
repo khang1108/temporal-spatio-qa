@@ -19,3 +19,4 @@ data/relevant_images/
 # Frontend builds & node_modules
 visualizer/node_modules/
 visualizer/dist/
+*.db
