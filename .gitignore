@@ -15,3 +15,7 @@ data/cached_embeddings/
 data/spatial_mqa/images/
 data/COCO2017/
 data/relevant_images/
+
+# Frontend builds & node_modules
+visualizer/node_modules/
+visualizer/dist/

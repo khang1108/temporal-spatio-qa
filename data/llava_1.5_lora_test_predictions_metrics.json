@@ -1,0 +1,32 @@
+{
+  "overall": {
+    "total_samples": 1076,
+    "correct_samples": 388,
+    "accuracy": 36.06,
+    "precision": 37.65,
+    "recall": 37.5,
+    "f1": 37.32
+  },
+  "by_axis": {
+    "A_x": 36.35,
+    "A_y": 29.17,
+    "A_z": 46.56
+  },
+  "by_perspective": {
+    "Q1_OutOfImage": 41.81,
+    "Q2_FirstPerson": 30.68,
+    "Q3_ThirdPerson": 52.94
+  },
+  "counts": {
+    "axis_total": {
+      "A_x (Horizontal)": 575,
+      "A_z (Vertical)": 189,
+      "A_y (Depth)": 312
+    },
+    "persp_total": {
+      "Q2_FirstPerson": 590,
+      "Q1_OutOfImage": 452,
+      "Q3_ThirdPerson": 34
+    }
+  }
+}
