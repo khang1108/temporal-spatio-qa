@@ -19,6 +19,7 @@ export default function App() {
   // Comments state from SQLite database
   const [commentsList, setCommentsList] = useState([]);
   const [commentInputs, setCommentInputs] = useState({});
+  const [autoExpandComments, setAutoExpandComments] = useState(true);
   const [expandedComments, setExpandedComments] = useState({});
   const [isSubmitting, setIsSubmitting] = useState({});
   const [commentFilterOnly, setCommentFilterOnly] = useState(false);
@@ -458,7 +459,7 @@ export default function App() {
                       className="btn-toggle-comments"
                       onClick={() => setExpandedComments(prev => ({ ...prev, [item.id]: !isExpanded }))}
                     >
-                      {isExpanded ? 'Thu gọn' : 'Xem / Thêm'}
+                      {isExpanded ? 'Thu gọn' : (sampleComments.length > 0 ? 'Xem nhận xét' : '+ Thêm nhận xét')}
                     </button>
                   </div>
 
