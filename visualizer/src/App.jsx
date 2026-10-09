@@ -333,7 +333,32 @@ export default function App() {
           (Trang {currentPage} / {totalPages})
         </div>
 
-        {totalPages > 1 && (
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+          {paginatedItems.length > 0 && (
+            <button
+              className="btn-nav"
+              style={{ fontSize: '12px', padding: '5px 12px' }}
+              title="Mở hoặc thu gọn tất cả nhận xét trên trang này"
+              onClick={() => {
+                const anyExpanded = paginatedItems.some(it => {
+                  return expandedComments[it.id] !== undefined ? expandedComments[it.id] : autoExpandComments;
+                });
+                if (anyExpanded) {
+                  setAutoExpandComments(false);
+                  setExpandedComments({});
+                } else {
+                  setAutoExpandComments(true);
+                  setExpandedComments({});
+                }
+              }}
+            >
+              {paginatedItems.some(it => (expandedComments[it.id] !== undefined ? expandedComments[it.id] : autoExpandComments))
+                ? 'Thu gọn tất cả nhận xét'
+                : 'Mở rộng tất cả nhận xét'}
+            </button>
+          )}
+
+          {totalPages > 1 && (
           <div className="pagination-controls">
             <button
               className="btn-nav"
@@ -354,13 +379,16 @@ export default function App() {
             </button>
           </div>
         )}
+        </div>
       </div>
 
       {/* Wide Card Grid */}
       <div className="wide-grid">
         {paginatedItems.map((item) => {
           const sampleComments = commentsBySample[item.id] || [];
-          const isExpanded = !!expandedComments[item.id];
+          const isExpanded = expandedComments[item.id] !== undefined
+            ? expandedComments[item.id]
+            : autoExpandComments;
 
           return (
             <div
