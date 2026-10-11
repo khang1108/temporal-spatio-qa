@@ -10,12 +10,94 @@ Dự án này tập trung giải quyết bài toán cốt lõi: **Nâng cao năn
 
 Các MLLM thịnh hành (LLaVA-1.5, GPT-4V, Gemini) đều gặp **"điểm nghẽn trí tuệ không gian"** mang tính cấu trúc: bộ mã hóa thị giác (CLIP ViT) ép phẳng thế giới vật lý 3D thành lưới pixel 2D, khiến mô hình hoàn toàn "mù" trước hình học 3D, chiều sâu khoảng cách và sự biến đổi góc nhìn của người quan sát.
 
-### 🌟 Triết Lý Nghiên Cứu: Phân Tích Cơ Chế Nội Tại $\rightarrow$ Can Thiệp Kiến Trúc Có Chủ Đích
-Dự án **KHÔNG** tiếp cận theo hướng "thử - sai" tinh chỉnh prompt bề mặt hay huấn luyện lại từ đầu (pre-training) tốn kém. Thay vào đó, dự án đi theo triết lý **Mechanistic Interpretability-Driven Architecture**:
-1. **Đi sâu vào tầng Token và Tham số (Mechanistic Diagnostics):** Mổ xẻ bản đồ chú ý (Attention Maps), dòng chảy biểu diễn không gian ẩn (Hidden States Trajectory), và trọng số các tầng Transformer để chỉ ra chính xác *tại sao, ở layer nào, và do attention head nào* mà mô hình bị "sập bẫy camera" (Representation Collapse vào góc nhìn 2D).
-2. **Visualize bằng chứng thất bại:** Trực quan hóa hiện tượng Attention bị phân tán khỏi nhân vật và Hidden States bị dính chùm vào góc nhìn camera.
-3. **Đề xuất Prefix Tuning can thiệp đúng nút thắt (Principled Intervention):** Dùng chuỗi **Embodiment / Coordinate Steering Prefix Tokens** bơm trực tiếp vào Key-Value Cache ($K, V$) tại các tầng Attention bị nghẽn, buộc mô hình xoay hệ quy chiếu về nhân vật trước khi sinh từ.
-4. **Chứng minh phục hồi (Before vs. After):** Chứng minh trực quan bằng Attention được tái căn chỉnh và định lượng bằng sự nhảy vọt độ chính xác trên benchmark chuẩn.
+### 🌟 Triết Lý Nghiên Cứu: Định Hình Lại Cách Tiếp Cận Khoa Học Cho ACIIDS
+Dự án **KHÔNG** biến quy trình nghiên cứu ($E_0 \rightarrow E_1 \rightarrow E_2 \rightarrow RQ_2$) thành một pipeline cố định mang tính giáo điều, giả định trước như thể chúng ta đã biết lỗi chắc chắn nằm ở attention heads và chỉ cần tìm đúng vị trí để sửa.
+
+**Thực tế nghiên cứu khách quan:**
+Chúng ta **chưa biết trước điều đó**. Hiện tại, chúng ta mới chỉ có một hiện tượng thực nghiệm cần giải thích: **LLaVA-1.5-7B + LoRA vẫn trả lời sai nghiêm trọng nhiều câu hỏi SpatialMQA yêu cầu nhập vai ($Q_2$) và suy luận vị trí tương đối**. 
+Chúng ta có một số giả thuyết xuất phát từ các nghiên cứu trước (prior research), nhưng **chưa biết giả thuyết nào thực sự đúng trên mô hình của mình**.
+
+Do đó, toàn bộ nghiên cứu được vận hành theo **Vòng lặp Khoa học Hướng Giả thuyết (Hypothesis-Driven Scientific Inquiry Loop)**:
+
+```
+                  ┌──────────────────────────────────────────────┐
+                  │          1. OBSERVATION (Quan sát)           │
+                  │  Mô hình thất bại ở đâu? Patterns lỗi gì?    │
+                  └──────────────────────┬───────────────────────┘
+                                         ▼
+                  ┌──────────────────────────────────────────────┐
+                  │           2. HYPOTHESIS (Giả thuyết)         │
+                  │ Dựa vào prior research, cơ chế nào giải thích?│
+                  └──────────────────────┬───────────────────────┘
+                                         ▼
+                  ┌──────────────────────────────────────────────┐
+                  │            3. PROBING (Thiết kế đo)          │
+                  │ Nếu giả thuyết đúng, kỳ vọng quan sát được gì?│
+                  └──────────────────────┬───────────────────────┘
+                                         ▼
+                  ┌──────────────────────────────────────────────┐
+                  │         4. INTERVENTION (Kiểm tra nhân quả)  │
+                  │ Can thiệp thành phần nghi vấn có đổi hành vi?│
+                  └──────────────────────┬───────────────────────┘
+                                         │
+                    ┌────────────────────┴────────────────────┐
+                    ▼                                         ▼
+       [CÓ BẰNG CHỨNG HỖ TRỢ]                      [KHÔNG CÓ BẰNG CHỨNG]
+       Thu hẹp cơ chế giải thích                   Kiểm tra lại phép đo
+       Kiểm thử nhân quả mạnh hơn                  Bác bỏ hoặc sửa đổi giả thuyết
+       Đánh giá khả năng steering                  Chuyển sang khảo sát cơ chế khác
+```
+
+Một vòng lặp nghiên cứu, không phải chuỗi bước mà mọi giả thuyết đều phải đi qua theo cùng thứ tự.
+
+> [!IMPORTANT]
+> **Điểm cốt lõi: Tính Khả Bác Bỏ (Falsifiability First)**  
+> Chúng ta **bắt buộc phải quyết định trước điều gì có thể bác bỏ giả thuyết**, chứ không chỉ thiết kế thí nghiệm để tìm bằng chứng ủng hộ nó. Một thí nghiệm chỉ có giá trị khoa học khi nó có khả năng chứng minh giả thuyết là sai.
+
+---
+
+### 🎯 1.1. Trở Lại Hai Câu Hỏi Nghiên Cứu (Research Questions): Chúng Ta Thực Sự Chưa Biết Điều Gì?
+
+#### 🔹 $\mathbf{RQ_1}$ — Cơ chế Thất bại (Mechanistic Failure Breakdown):
+*Trong quá trình suy luận không gian, sự tương tác giữa Text Tokens và Visual Tokens bị đứt gãy tại những layers/heads nào? Liệu attention leakage và camera-default representation collapse có giải thích được thất bại khi nhập vai hay không?*
+
+Câu hỏi này được bóc tách rành mạch thành **hai tầng nhận thức**:
+1. **Tầng Hiện Tượng (Phenomenological Level):**
+   - Mô hình có thực sự bị ảnh hưởng bởi góc nhìn mặc định của camera không?
+   - Các lỗi có thực sự liên quan đến việc chú ý sai đối tượng (wrong object attention) hay không?
+2. **Tầng Cơ Chế (Mechanistic Level):**
+   - Nếu hiện tượng tồn tại, nó gắn với:
+     * Trọng số chú ý (Attention Weights $\mathbf{A}$)?
+     * Đầu ra của từng head (Head Outputs $\mathbf{h}_{l,h}$)?
+     * Không gian biểu diễn ẩn (Hidden Representations / Residual Stream Trajectory)?
+     * Hay một cơ chế phân tán (Distributed Mechanism) lan tỏa qua nhiều layers?
+   - **Quy tắc bắt buộc:** Chúng ta **không được xem tầng cơ chế là kết luận có sẵn**.
+
+#### 🔹 $\mathbf{RQ_2}$ — Can Thiệp Để Cải Thiện (Conditioned Frame-Shift Intervention):
+*Nghiên cứu cơ chế Soft Coordinate Steering Prefix Tokens đưa vào Key-Value Cache ($K, V$), điều kiện hóa theo bounding box và vector hướng nhìn $\vec{h}_{\text{agent}}$ của nhân vật.*
+
+Ba điều **chưa biết bắt buộc phải kiểm chứng bằng Ablation Study** (tuyệt đối không kết luận từ các paper khác):
+1. **Vị trí can thiệp:** Đưa prefix vào $K, V$ ở đâu và ở layer nào có ảnh hưởng đáng kể?
+2. **Bản chất tác động:** Tác động ấy có thực sự giúp mô hình sử dụng hệ quy chiếu nhân vật (Agent Reference Frame) hay chỉ đơn thuần làm thay đổi phân phối từ ngữ đầu ra (Output Distribution)?
+3. **Thành phần tạo ra cải thiện:** Nếu có cải thiện độ chính xác, thành phần nào thực sự tạo ra cải thiện:
+   - Bản thân các tokens prefix?
+   - Điều kiện không gian (Spatial Condition: bounding box + hướng nhìn)?
+   - Chiến lược chọn tầng can thiệp (Layer Selection)?
+   - Hay chỉ đơn thuần do việc thêm tham số có thể huấn luyện (Trainable Parameters)?
+
+---
+
+### 📚 1.2. Dùng Prior Research Để Hình Thành Giả Thuyết, Không Dùng Để Tiên Đoán Kết Quả
+Ba công trình/trường phái tiêu biểu chúng ta đã khảo sát cung cấp **ba manh mối khác nhau**:
+1. **Manh mối 1 — Biểu diễn Tuyến tính & Phân tích Cơ chế VLMs (Engels et al., 2026 / Linear Mech VLMs):**  
+   - *Gợi ý giả thuyết:* Khái niệm không gian có thể được mã hóa thành các hướng tuyến tính (Linear Representations) trong không gian ẩn, hoặc do các attention heads chuyên biệt phụ trách.
+   - *Điều kiện bác bỏ:* Nếu linear probes không tìm thấy phân tách có ý nghĩa hoặc việc can thiệp vào các heads nghi vấn không làm thay đổi phân phối dự đoán $\rightarrow$ Bác bỏ giả thuyết head chuyên môn hóa, chuyển sang khảo sát cơ chế phân tán đa tầng.
+2. **Manh mối 2 — Điểm Mù Chiều Sâu từ Bộ Mã Hóa Thị Giác (SpatialVLM, Perception Encoder, SpatioLM):**  
+   - *Gợi ý giả thuyết:* Đứt gãy có thể xuất phát từ chính việc bộ mã hóa CLIP ViT 2D làm mất chiều sâu tương đối ngay từ tầng trích xuất visual tokens, khiến LLM thiếu thông tin hình học trước khi suy luận.
+   - *Điều kiện bác bỏ:* Nếu ngay cả khi cung cấp rõ ràng thông tin depth/bbox 3D mà mô hình vẫn thất bại trong việc xoay hệ quy chiếu $\rightarrow$ Điểm nghẽn nằm ở khâu frame transformation của LLM chứ không đơn thuần do thiếu depth tokens.
+3. **Manh mối 3 — Khả năng & Giới hạn của Prefix Tuning (Li & Liang 2021, MoReS 2025, ICLR 2024 Limitations):**  
+   - *Gợi ý giả thuyết:* Bơm learnable prefix vào $K, V$ cache có thể hoạt động như một toán tử xoay hệ quy chiếu mềm để "lái" biểu diễn.
+   - *Điều kiện bác bỏ:* ICLR 2024 chứng minh prefix tuning có thể gặp giới hạn về sức chứa biểu diễn (capacity limitation) và chỉ làm trôi phân phối ngôn ngữ. Nếu prefix không vượt qua được LoRA baseline trên các ca ego-centric đối ngẫu $\rightarrow$ Bác bỏ prefix tự do, bắt buộc chuyển sang prefix có gating điều kiện hình học rõ ràng.
 
 ---
 
@@ -155,3 +237,11 @@ Mọi AI Agent làm việc trong dự án này bắt buộc tuân thủ các ngu
 5. **Kỷ Luật Git:**
    - Kiểm tra `git status` trước và sau khi can thiệp mã nguồn.
    - Commit với thông điệp rõ ràng theo chuẩn: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`.
+6. **Tư Duy Đồng Đội Phản Biện & Đề Xuất Giải Pháp (Constructive Teammate Critique & Solution-Oriented Collaboration):**
+   - **Tuyệt đối không tâng bốc suông (No Flattery):** Không dùng lời khen đãi bôi, sáo rỗng hoặc vội vã đồng ý mù quáng.
+   - **Phản biện mang tính xây dựng của một người đồng đội (Constructive Teammate Mindset):** Không phủ định triệt tiêu hay bác bỏ cực đoan ý tưởng của người dùng. Hãy coi ý tưởng của người dùng là một trực giác nghiên cứu (research intuition) quý giá: phân tích điểm nghẽn kỹ thuật, chỉ ra các rủi ro lý thuyết dựa trên các công trình đã khảo sát, nhưng **bắt buộc phải cùng tìm kiếm giải pháp (proactive solutions), đề xuất các ngả rẽ khả thi hoặc cách biến ý tưởng đó thành hiện thực trong khuôn khổ tài nguyên cho phép**.
+   - **Lập luận và gợi mở bằng bằng chứng (Evidence-Based Suggestions):** Mọi lời khuyên hoặc hướng đi mới phải được neo vào các cơ chế, phát hiện thực nghiệm và phương pháp luận từ các paper đã khảo sát (SpatialMQA, Perception Encoder, SpatioLM, Kang et al., Prefix-Tuning, v.v.).
+7. **Kỷ Luật Khoa Học Hướng Giả Thuyết & Chống Thiên Kiến Xác Nhận (Falsifiability Discipline & Anti-Confirmation Bias):**
+   - Tuyệt đối không giả định trước cơ chế thất bại hay kết quả can thiệp khi chưa có số liệu thực nghiệm trên LLaVA-1.5 / SpaceLLaVA.
+   - Mọi thí nghiệm probing hay intervention phải xác định trước: *Kết quả thực nghiệm nào sẽ bác bỏ giả thuyết này?*
+   - Nếu thực nghiệm cho thấy giả thuyết sai, phải dũng cảm bác bỏ và cập nhật giả thuyết mới, tuyệt đối không cố gượng ép số liệu để bảo vệ định kiến ban đầu.
